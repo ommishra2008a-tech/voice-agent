@@ -66,15 +66,22 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, []);
+  }, [user?.id]);
 
   const loadProjects = async () => {
     try {
-      let items = await solarch.getProjects();
+      const curUser = user || solarch.getUser();
+      if (!curUser) {
+        setProjects([]);
+        setSelectedProject(null);
+        setProfiles([]);
+        return;
+      }
+      let items = await solarch.getProjects(curUser.id);
       if (items.length === 0) {
         try {
-          const curUser = solarch.getUser();
-          const defaultProj = await solarch.createProject("Voice AI Workspace", "Default workspace for voice chat and cloning");
+          const workspaceName = `${curUser.name || curUser.email.split("@")[0]}'s Workspace`;
+          const defaultProj = await solarch.createProject(workspaceName, "Personal workspace for voice chat and cloning");
           items = [defaultProj];
         } catch (pErr) {
           console.warn("Failed to create default project:", pErr);
@@ -82,24 +89,34 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       }
       setProjects(items);
       if (items.length > 0) {
-        const savedProjId = typeof window !== "undefined" ? localStorage.getItem("selected_project_id") : null;
+        const savedProjId = typeof window !== "undefined" ? localStorage.getItem(`selected_project_id_${curUser.id}`) : null;
         const matched = (savedProjId && items.find(p => p.id === savedProjId)) || items[0];
         setSelectedProject(matched);
         if (typeof window !== "undefined" && matched?.id) {
-          localStorage.setItem("selected_project_id", matched.id);
+          localStorage.setItem(`selected_project_id_${curUser.id}`, matched.id);
         }
-        loadProfiles(matched.id);
+        loadProfiles(matched.id, curUser.id);
+      } else {
+        setSelectedProject(null);
+        setProfiles([]);
       }
     } catch (e) {
       console.warn("loadProjects error:", e);
     }
   };
 
-  const loadProfiles = async (projectId: string) => {
+  const loadProfiles = async (projectId: string, userIdOverride?: string) => {
     try {
-      const items = await solarch.getVoiceProfiles(projectId);
+      const curUserId = userIdOverride || user?.id || solarch.getUser()?.id;
+      if (!curUserId) {
+        setProfiles([]);
+        return;
+      }
+      const items = await solarch.getVoiceProfiles(projectId, curUserId);
       setProfiles(items);
-    } catch (e) {}
+    } catch (e) {
+      setProfiles([]);
+    }
   };
 
   // Direct Audio Volume & Mute Adjuster for Web Audio API GainNode

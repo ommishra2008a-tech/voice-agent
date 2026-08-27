@@ -207,8 +207,24 @@ class XTTSv2Adapter(VoiceEngine):
         if not output_path:
             output_path = os.path.join(self.output_dir, f"{req_id}.{req.output_format}")
 
-        # Resolve reference audio for voice cloning (accepts req.reference_audio_path or req.voice_profile_id)
-        reference_audio = self._resolve_reference_audio(req.voice_profile_id, req.reference_audio_path)
+        # Resolve reference audio for voice cloning with multi-tenant ownership enforcement
+        try:
+            reference_audio = self._resolve_reference_audio(
+                voice_profile_id=req.voice_profile_id,
+                reference_audio_path=req.reference_audio_path,
+                project_id=req.project_id,
+                user_id=req.user_id
+            )
+        except PermissionError as perm_err:
+            logger.warning(f"[XTTSv2] Access denied: {perm_err}")
+            return VoiceGenerationResponse(
+                request_id=req_id, status="FAILED", audio_path="", duration=0.0,
+                sample_rate=req.sample_rate, channels=1, format=req.output_format,
+                quality_score=0.0, model="xtts-v2", model_version="v2.0.4",
+                execution_time_ms=int((time.time() - start_time) * 1000),
+                error=f"VOICE_PROFILE_ACCESS_DENIED: {str(perm_err)}"
+            )
+
         if not reference_audio:
             logger.error(f"[XTTSv2] VOICE_REFERENCE_UNAVAILABLE: Could not resolve reference audio for voice profile '{req.voice_profile_id}'. No generic fallback permitted.")
             return VoiceGenerationResponse(
@@ -316,35 +332,140 @@ class XTTSv2Adapter(VoiceEngine):
                 error=f"XTTS v2 synthesis error: {str(e)}"
             )
 
-    def _resolve_reference_audio(self, voice_profile_id: str, reference_audio_path: Optional[str] = None) -> Optional[str]:
-        """Resolve actual reference audio file path for voice cloning from durable storage without generic fallback."""
+    def _resolve_reference_audio(
+        self,
+        voice_profile_id: str,
+        reference_audio_path: Optional[str] = None,
+        project_id: Optional[str] = None,
+        user_id: Optional[str] = None
+    ) -> Optional[str]:
+        """Resolve actual reference audio file path for voice cloning from durable storage with strict ownership verification."""
         # 1. Direct explicit reference audio path passed in request
         if reference_audio_path and os.path.exists(reference_audio_path) and os.path.getsize(reference_audio_path) > 1000:
-            logger.info(f"[XTTSv2] Resolved from explicit reference_audio_path: {reference_audio_path}")
-            return ReferenceAudioPreprocessor.get_clean_reference(reference_audio_path)
+            clean_path = os.path.abspath(reference_audio_path)
+            # Prevent path traversal
+            if ".." in reference_audio_path:
+                raise PermissionError("Path traversal rejected")
+            logger.info(f"[XTTSv2] Resolved from explicit reference_audio_path: {clean_path}")
+            return ReferenceAudioPreprocessor.get_clean_reference(clean_path)
 
         if not voice_profile_id:
             logger.warning("[XTTSv2] Empty voice_profile_id provided")
             return None
 
-        # 2. Direct absolute or relative path check
-        if os.path.exists(voice_profile_id) and os.path.getsize(voice_profile_id) > 1000:
-            logger.info(f"[XTTSv2] Resolved from direct file path: {voice_profile_id}")
-            return ReferenceAudioPreprocessor.get_clean_reference(voice_profile_id)
+        # 2. Check Solarch BaaS PocketBase record by ID with ownership verification
+        try:
+            import urllib.request
+            import urllib.parse
+            import json
 
-        # 3. Check profile metadata JSON in durable storage
+            # Try direct record fetch by ID
+            solarch_url = f"http://localhost:8090/api/collections/voice_profiles/records/{voice_profile_id}"
+            req = urllib.request.Request(solarch_url, headers={"User-Agent": "VoiceEngine"})
+            try:
+                with urllib.request.urlopen(req, timeout=1.0) as resp:
+                    if resp.status == 200:
+                        rec_data = json.loads(resp.read().decode("utf-8"))
+                        rec_user = rec_data.get("userId")
+                        rec_proj = rec_data.get("projectId")
+
+                        # Multi-Tenant Ownership Check
+                        if user_id and rec_user and rec_user != user_id:
+                            logger.warning(f"[XTTSv2] SECURITY VIOLATION: User '{user_id}' denied access to Voice Profile '{voice_profile_id}' owned by User '{rec_user}'.")
+                            raise PermissionError(f"VOICE_PROFILE_ACCESS_DENIED: User '{user_id}' is not authorized to access Voice Profile '{voice_profile_id}'.")
+
+                        if project_id and rec_proj and rec_proj != project_id:
+                            logger.warning(f"[XTTSv2] SECURITY VIOLATION: Project '{project_id}' denied access to Voice Profile '{voice_profile_id}' belonging to Project '{rec_proj}'.")
+                            raise PermissionError(f"VOICE_PROFILE_ACCESS_DENIED: Project '{project_id}' is not authorized to access Voice Profile '{voice_profile_id}'.")
+
+                        p_ref = (
+                            rec_data.get("primaryReferencePath")
+                            or rec_data.get("referenceAudio")
+                            or (rec_data.get("referenceAudioPaths") or [None])[0]
+                        )
+                        if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
+                            logger.info(f"[XTTSv2] Resolved from authorized Solarch record: {p_ref}")
+                            return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
+
+                        src_asset = rec_data.get("sourceAssetId") or rec_data.get("voiceProfileId")
+                        if src_asset:
+                            asset_ref = os.path.join(os.getcwd(), "storage", "voice_profiles", src_asset, "reference.wav")
+                            if os.path.exists(asset_ref) and os.path.getsize(asset_ref) > 1000:
+                                logger.info(f"[XTTSv2] Resolved from Solarch sourceAssetId storage: {asset_ref}")
+                                return ReferenceAudioPreprocessor.get_clean_reference(asset_ref)
+            except PermissionError:
+                raise
+            except Exception:
+                pass
+
+            # Try search query strictly scoped to current project and user
+            filter_clauses = [f"(name='{voice_profile_id}' || id='{voice_profile_id}' || sourceAssetId='{voice_profile_id}')"]
+            if project_id:
+                filter_clauses.append(f"projectId='{project_id}'")
+            if user_id:
+                filter_clauses.append(f"userId='{user_id}'")
+
+            filter_expr = urllib.parse.quote(" && ".join(filter_clauses))
+            query_url = f"http://localhost:8090/api/collections/voice_profiles/records?filter={filter_expr}"
+            req2 = urllib.request.Request(query_url, headers={"User-Agent": "VoiceEngine"})
+            try:
+                with urllib.request.urlopen(req2, timeout=1.0) as resp2:
+                    if resp2.status == 200:
+                        query_data = json.loads(resp2.read().decode("utf-8"))
+                        items = query_data.get("items", [])
+                        if items:
+                            first_item = items[0]
+                            # Post-verify ownership
+                            if user_id and first_item.get("userId") and first_item.get("userId") != user_id:
+                                raise PermissionError(f"VOICE_PROFILE_ACCESS_DENIED: User '{user_id}' is not authorized to access profile '{voice_profile_id}'.")
+                            if project_id and first_item.get("projectId") and first_item.get("projectId") != project_id:
+                                raise PermissionError(f"VOICE_PROFILE_ACCESS_DENIED: Project '{project_id}' is not authorized to access profile '{voice_profile_id}'.")
+
+                            p_ref = (
+                                first_item.get("primaryReferencePath")
+                                or first_item.get("referenceAudio")
+                                or (first_item.get("referenceAudioPaths") or [None])[0]
+                            )
+                            if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
+                                logger.info(f"[XTTSv2] Resolved from authorized Solarch query: {p_ref}")
+                                return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
+
+                            src_asset = first_item.get("sourceAssetId") or first_item.get("voiceProfileId")
+                            if src_asset:
+                                asset_ref = os.path.join(os.getcwd(), "storage", "voice_profiles", src_asset, "reference.wav")
+                                if os.path.exists(asset_ref) and os.path.getsize(asset_ref) > 1000:
+                                    return ReferenceAudioPreprocessor.get_clean_reference(asset_ref)
+            except PermissionError:
+                raise
+            except Exception:
+                pass
+        except PermissionError:
+            raise
+        except Exception as solarch_err:
+            logger.warning(f"[XTTSv2] Solarch lookup warning: {solarch_err}")
+
+        # 3. Check profile metadata JSON in durable storage with ownership check
         profile_meta_path = os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id, "profile.json")
         if os.path.exists(profile_meta_path):
             try:
                 import json
                 with open(profile_meta_path, "r", encoding="utf-8") as f:
                     meta = json.load(f)
+                meta_user = meta.get("user_id") or meta.get("userId")
+                meta_proj = meta.get("project_id") or meta.get("projectId")
+                if user_id and meta_user and meta_user != user_id:
+                    raise PermissionError(f"VOICE_PROFILE_ACCESS_DENIED: Storage profile owned by another user.")
+                if project_id and meta_proj and meta_proj != project_id:
+                    raise PermissionError(f"VOICE_PROFILE_ACCESS_DENIED: Storage profile owned by another project.")
+
                 if meta.get("primary_reference_path") and os.path.exists(meta["primary_reference_path"]):
                     return ReferenceAudioPreprocessor.get_clean_reference(meta["primary_reference_path"])
                 if meta.get("reference_audio_paths"):
                     for ref_p in meta["reference_audio_paths"]:
                         if os.path.exists(ref_p) and os.path.getsize(ref_p) > 1000:
                             return ReferenceAudioPreprocessor.get_clean_reference(ref_p)
+            except PermissionError:
+                raise
             except Exception as meta_err:
                 logger.warning(f"Failed to read profile manifest for {voice_profile_id}: {meta_err}")
 
@@ -363,91 +484,8 @@ class XTTSv2Adapter(VoiceEngine):
                 logger.info(f"[XTTSv2] Resolved from storage candidate: {abs_p}")
                 return ReferenceAudioPreprocessor.get_clean_reference(abs_p)
 
-        # 5. Query Solarch BaaS PocketBase record by ID, sourceAssetId, or Name
-        try:
-            import urllib.request
-            import urllib.parse
-            import json
-
-            # Try direct record fetch by ID
-            solarch_url = f"http://localhost:8090/api/collections/voice_profiles/records/{voice_profile_id}"
-            req = urllib.request.Request(solarch_url, headers={"User-Agent": "VoiceEngine"})
-            try:
-                with urllib.request.urlopen(req, timeout=1.0) as resp:
-                    if resp.status == 200:
-                        rec_data = json.loads(resp.read().decode("utf-8"))
-                        p_ref = (
-                            rec_data.get("primaryReferencePath")
-                            or rec_data.get("referenceAudio")
-                            or (rec_data.get("referenceAudioPaths") or [None])[0]
-                        )
-                        if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
-                            logger.info(f"[XTTSv2] Resolved from Solarch BaaS record audio field: {p_ref}")
-                            return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
-                        
-                        # Check if record has sourceAssetId pointing to durable storage
-                        src_asset = rec_data.get("sourceAssetId") or rec_data.get("voiceProfileId")
-                        if src_asset:
-                            asset_ref = os.path.join(os.getcwd(), "storage", "voice_profiles", src_asset, "reference.wav")
-                            if os.path.exists(asset_ref) and os.path.getsize(asset_ref) > 1000:
-                                logger.info(f"[XTTSv2] Resolved from Solarch sourceAssetId storage: {asset_ref}")
-                                return ReferenceAudioPreprocessor.get_clean_reference(asset_ref)
-            except Exception:
-                pass
-
-            # Try search filter by name, id, or sourceAssetId
-            filter_expr = urllib.parse.quote(f"(name='{voice_profile_id}' || id='{voice_profile_id}' || sourceAssetId='{voice_profile_id}')")
-            query_url = f"http://localhost:8090/api/collections/voice_profiles/records?filter={filter_expr}"
-            req2 = urllib.request.Request(query_url, headers={"User-Agent": "VoiceEngine"})
-            try:
-                with urllib.request.urlopen(req2, timeout=1.0) as resp2:
-                    if resp2.status == 200:
-                        query_data = json.loads(resp2.read().decode("utf-8"))
-                        items = query_data.get("items", [])
-                        if items:
-                            first_item = items[0]
-                            p_ref = (
-                                first_item.get("primaryReferencePath")
-                                or first_item.get("referenceAudio")
-                                or (first_item.get("referenceAudioPaths") or [None])[0]
-                            )
-                            if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
-                                logger.info(f"[XTTSv2] Resolved from Solarch BaaS query audio field: {p_ref}")
-                                return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
-
-                            src_asset = first_item.get("sourceAssetId") or first_item.get("voiceProfileId")
-                            if src_asset:
-                                asset_ref = os.path.join(os.getcwd(), "storage", "voice_profiles", src_asset, "reference.wav")
-                                if os.path.exists(asset_ref) and os.path.getsize(asset_ref) > 1000:
-                                    logger.info(f"[XTTSv2] Resolved from Solarch query sourceAssetId storage: {asset_ref}")
-                                    return ReferenceAudioPreprocessor.get_clean_reference(asset_ref)
-            except Exception:
-                pass
-        except Exception as solarch_err:
-            logger.warning(f"[XTTSv2] Solarch lookup failed: {solarch_err}")
-
-        # 6. Check all subdirectories in storage/voice_profiles to match by name in profile.json
-        base_profiles_dir = os.path.join(os.getcwd(), "storage", "voice_profiles")
-        if os.path.isdir(base_profiles_dir):
-            try:
-                import json
-                for sub in os.listdir(base_profiles_dir):
-                    sub_dir = os.path.join(base_profiles_dir, sub)
-                    manifest_p = os.path.join(sub_dir, "profile.json")
-                    if os.path.exists(manifest_p):
-                        with open(manifest_p, "r", encoding="utf-8") as mf:
-                            m = json.load(mf)
-                        m_name = m.get("name", "").strip().lower()
-                        target_id = voice_profile_id.strip().lower()
-                        if m_name == target_id or m.get("voice_profile_id") == voice_profile_id or m.get("profile_id") == voice_profile_id or sub.lower() == target_id:
-                            ref_p = m.get("primary_reference_path") or os.path.join(sub_dir, "reference.wav")
-                            if os.path.exists(ref_p) and os.path.getsize(ref_p) > 1000:
-                                logger.info(f"[XTTSv2] Resolved by name/id '{voice_profile_id}' to manifest ref: {ref_p}")
-                                return ReferenceAudioPreprocessor.get_clean_reference(ref_p)
-            except Exception as scan_err:
-                logger.warning(f"[XTTSv2] Storage profiles scan error: {scan_err}")
-
-        # 7. Check if profile folder contains any .wav files
+        logger.error(f"[XTTSv2] VOICE_REFERENCE_UNAVAILABLE: No valid reference audio found for voice profile '{voice_profile_id}'. Strict non-fallback policy enforced.")
+        return None
         profile_dir = os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id)
         if os.path.isdir(profile_dir):
             for fname in os.listdir(profile_dir):

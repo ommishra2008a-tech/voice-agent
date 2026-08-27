@@ -242,9 +242,10 @@ export default function VoiceChatStudio({
 
   const loadConversationMessages = async (conversationId: string, activeProfiles?: VoiceProfileRecord[]) => {
     if (!project || !conversationId) return;
+    const currentUserId = project.userId || solarch.getUser()?.id || "u1";
     try {
       const currentProfiles = activeProfiles || profiles;
-      const jobs = await solarch.getGenerationJobsByConversation(conversationId, project.id);
+      const jobs = await solarch.getGenerationJobsByConversation(conversationId, project.id, currentUserId);
 
       if (!jobs || jobs.length === 0) {
         setMessages([
@@ -320,10 +321,10 @@ export default function VoiceChatStudio({
     const currentUserId = project.userId || solarch.getUser()?.id || "u1";
     console.log("[VoiceChatStudio] Loading conversations for project:", project.id, "user:", currentUserId);
     try {
-      const convs = await solarch.getConversations(project.id);
+      const convs = await solarch.getConversations(project.id, currentUserId);
       setConversations(convs);
 
-      const savedConvId = typeof window !== "undefined" ? localStorage.getItem(`active_conv_id_${project.id}`) : null;
+      const savedConvId = typeof window !== "undefined" ? localStorage.getItem(`active_conv_id_${currentUserId}_${project.id}`) : null;
       let targetConv: ConversationRecord | null = null;
 
       if (convs.length > 0) {
@@ -340,7 +341,7 @@ export default function VoiceChatStudio({
 
       setActiveConversation(targetConv);
       if (typeof window !== "undefined" && targetConv?.id) {
-        localStorage.setItem(`active_conv_id_${project.id}`, targetConv.id);
+        localStorage.setItem(`active_conv_id_${currentUserId}_${project.id}`, targetConv.id);
       }
 
       if (targetConv?.id) {
@@ -353,16 +354,17 @@ export default function VoiceChatStudio({
 
   const handleNewChat = async () => {
     if (!project) return;
+    const currentUserId = project.userId || solarch.getUser()?.id || "u1";
     try {
       const newConv = await solarch.createConversation({
         projectId: project.id,
-        userId: project.userId || solarch.getUser()?.id || "u1",
+        userId: currentUserId,
         title: "New Conversation"
       });
       setConversations((prev) => [newConv, ...prev.filter(c => c.id !== newConv.id)]);
       setActiveConversation(newConv);
       if (typeof window !== "undefined") {
-        localStorage.setItem(`active_conv_id_${project.id}`, newConv.id || "");
+        localStorage.setItem(`active_conv_id_${currentUserId}_${project.id}`, newConv.id || "");
       }
       setMessages([
         {
@@ -383,9 +385,10 @@ export default function VoiceChatStudio({
 
   const handleSelectConversation = async (conv: ConversationRecord) => {
     if (activeConversation?.id === conv.id) return;
+    const currentUserId = project?.userId || solarch.getUser()?.id || "u1";
     setActiveConversation(conv);
     if (typeof window !== "undefined" && project?.id && conv.id) {
-      localStorage.setItem(`active_conv_id_${project.id}`, conv.id);
+      localStorage.setItem(`active_conv_id_${currentUserId}_${project.id}`, conv.id);
     }
     if (conv.id) {
       await loadConversationMessages(conv.id);
@@ -448,30 +451,31 @@ export default function VoiceChatStudio({
       { label: "Older", items: [] }
     ];
 
-    for (const c of filtered) {
-      const date = c.updated ? new Date(c.updated) : (c.created ? new Date(c.created) : now);
-      const time = date.getTime();
-
-      if (time >= today) {
+    filtered.forEach(c => {
+      const msgTime = c.lastMessageAt ? new Date(c.lastMessageAt).getTime() : (c.updated ? new Date(c.updated).getTime() : 0);
+      if (msgTime >= today) {
         groups[0].items.push(c);
-      } else if (time >= yesterday) {
+      } else if (msgTime >= yesterday) {
         groups[1].items.push(c);
       } else {
         groups[2].items.push(c);
       }
-    }
+    });
 
     return groups.filter(g => g.items.length > 0);
   };
 
   const loadProfiles = async () => {
     if (!project) return;
+    const currentUserId = project.userId || solarch.getUser()?.id || "u1";
     try {
-      const items = await solarch.getVoiceProfiles(project.id);
+      const items = await solarch.getVoiceProfiles(project.id, currentUserId);
       setProfiles(items);
-      const savedId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_id_${project.id}`) : null;
-      const savedVoiceProfId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_prof_id_${project.id}`) : null;
-      const savedName = typeof window !== "undefined" ? localStorage.getItem(`active_voice_name_${project.id}`) : null;
+
+      const savedId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_id_${currentUserId}_${project.id}`) : null;
+      const savedVoiceProfId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_prof_id_${currentUserId}_${project.id}`) : null;
+      const savedName = typeof window !== "undefined" ? localStorage.getItem(`active_voice_name_${currentUserId}_${project.id}`) : null;
+
       if (items.length > 0) {
         const match = items.find((p) => 
           (savedId && p.id === savedId) || 
@@ -479,6 +483,8 @@ export default function VoiceChatStudio({
           (savedName && p.name.toLowerCase() === savedName.toLowerCase())
         );
         setSelectedProfile(match || items[0]);
+      } else {
+        setSelectedProfile(null);
       }
       await loadConversations(items);
     } catch (e) {}
@@ -502,25 +508,27 @@ export default function VoiceChatStudio({
   };
 
   const handleProfileRenamed = (profileId: string, newName: string) => {
+    const currentUserId = project?.userId || solarch.getUser()?.id || "u1";
     setProfiles((prev) =>
       prev.map((p) => (p.id === profileId || p.voiceProfileId === profileId ? { ...p, name: newName } : p))
     );
     if (selectedProfile && (selectedProfile.id === profileId || selectedProfile.voiceProfileId === profileId)) {
       setSelectedProfile((prev) => (prev ? { ...prev, name: newName } : null));
       if (project && typeof window !== "undefined") {
-        localStorage.setItem(`active_voice_name_${project.id}`, newName);
+        localStorage.setItem(`active_voice_name_${currentUserId}_${project.id}`, newName);
       }
     }
   };
 
   const handleVoiceSelected = (profile: VoiceProfileRecord) => {
     setSelectedProfile(profile);
+    const currentUserId = project?.userId || solarch.getUser()?.id || "u1";
     if (project && typeof window !== "undefined") {
-      localStorage.setItem(`active_voice_id_${project.id}`, profile.id || "");
-      localStorage.setItem(`active_voice_prof_id_${project.id}`, profile.voiceProfileId || profile.sourceAssetId || "");
-      localStorage.setItem(`active_voice_name_${project.id}`, profile.name);
+      localStorage.setItem(`active_voice_id_${currentUserId}_${project.id}`, profile.id || "");
+      localStorage.setItem(`active_voice_prof_id_${currentUserId}_${project.id}`, profile.voiceProfileId || profile.sourceAssetId || "");
+      localStorage.setItem(`active_voice_name_${currentUserId}_${project.id}`, profile.name);
       if (profile.primaryReferencePath || profile.referenceAudio) {
-        localStorage.setItem(`active_voice_ref_${project.id}`, profile.primaryReferencePath || profile.referenceAudio || "");
+        localStorage.setItem(`active_voice_ref_${currentUserId}_${project.id}`, profile.primaryReferencePath || profile.referenceAudio || "");
       }
     }
   };

@@ -169,9 +169,17 @@ export class SolarchService {
   }
 
   // --- Projects ---
-  async getProjects(): Promise<Project[]> {
-    const data = await this.request("/api/collections/projects/records?sort=-created");
-    return data.items || [];
+  async getProjects(userIdOverride?: string): Promise<Project[]> {
+    const userId = userIdOverride || this.currentUser?.id;
+    if (!userId) return [];
+    try {
+      const filter = encodeURIComponent(`(userId='${userId}')`);
+      const data = await this.request(`/api/collections/projects/records?filter=${filter}&sort=-created`);
+      const items = data.items || [];
+      return items.filter((p: any) => p.userId === userId);
+    } catch {
+      return [];
+    }
   }
 
   async createProject(name: string, description: string): Promise<Project> {
@@ -196,22 +204,59 @@ export class SolarchService {
 
 
   // --- Voice Profiles ---
-  async getVoiceProfiles(projectId: string): Promise<VoiceProfileRecord[]> {
-    const data = await this.request(`/api/collections/voice_profiles/records?filter=(projectId='${projectId}')&sort=-created`);
-    const items = data.items || [];
-    return items.map((item: any) => ({
-      ...item,
-      primaryReferencePath: item.primaryReferencePath || item.referenceAudio || undefined,
-      referenceAudio: item.referenceAudio || item.primaryReferencePath || undefined,
-      voiceProfileId: item.voiceProfileId || item.sourceAssetId || item.id,
-      sourceAssetId: item.sourceAssetId || item.voiceProfileId || item.id,
-      referenceAudioPaths: item.referenceAudioPaths || (item.referenceAudio ? [item.referenceAudio] : (item.primaryReferencePath ? [item.primaryReferencePath] : []))
-    }));
+  async getVoiceProfiles(projectId: string, userIdOverride?: string): Promise<VoiceProfileRecord[]> {
+    const userId = userIdOverride || this.currentUser?.id;
+    if (!userId || !projectId) return [];
+    try {
+      const filter = encodeURIComponent(`(projectId='${projectId}' && userId='${userId}')`);
+      const data = await this.request(`/api/collections/voice_profiles/records?filter=${filter}&sort=-created`);
+      const items = data.items || [];
+      return items
+        .filter((item: any) => item.userId === userId && item.projectId === projectId)
+        .map((item: any) => ({
+          ...item,
+          primaryReferencePath: item.primaryReferencePath || item.referenceAudio || undefined,
+          referenceAudio: item.referenceAudio || item.primaryReferencePath || undefined,
+          voiceProfileId: item.voiceProfileId || item.sourceAssetId || item.id,
+          sourceAssetId: item.sourceAssetId || item.voiceProfileId || item.id,
+          referenceAudioPaths: item.referenceAudioPaths || (item.referenceAudio ? [item.referenceAudio] : (item.primaryReferencePath ? [item.primaryReferencePath] : []))
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  async getVoiceProfileById(id: string, projectId?: string, userIdOverride?: string): Promise<VoiceProfileRecord | null> {
+    const userId = userIdOverride || this.currentUser?.id;
+    try {
+      const item = await this.request(`/api/collections/voice_profiles/records/${id}`);
+      if (!item) return null;
+      if (userId && item.userId && item.userId !== userId) {
+        console.warn("[Solarch] Security violation: Attempted cross-user voice profile access denied.");
+        return null;
+      }
+      if (projectId && item.projectId && item.projectId !== projectId) {
+        console.warn("[Solarch] Security violation: Attempted cross-project voice profile access denied.");
+        return null;
+      }
+      return {
+        ...item,
+        primaryReferencePath: item.primaryReferencePath || item.referenceAudio || undefined,
+        referenceAudio: item.referenceAudio || item.primaryReferencePath || undefined,
+        voiceProfileId: item.voiceProfileId || item.sourceAssetId || item.id,
+        sourceAssetId: item.sourceAssetId || item.voiceProfileId || item.id,
+        referenceAudioPaths: item.referenceAudioPaths || (item.referenceAudio ? [item.referenceAudio] : (item.primaryReferencePath ? [item.primaryReferencePath] : []))
+      };
+    } catch {
+      return null;
+    }
   }
 
   async createVoiceProfile(profile: VoiceProfileRecord): Promise<any> {
+    const userId = this.currentUser?.id || profile.userId;
     const payload = {
       ...profile,
+      userId,
       referenceAudio: profile.primaryReferencePath || profile.referenceAudio || undefined,
       sourceAssetId: profile.voiceProfileId || profile.sourceAssetId || profile.id || undefined,
       primaryReferencePath: profile.primaryReferencePath || profile.referenceAudio || undefined,
@@ -237,10 +282,14 @@ export class SolarchService {
   }
 
   // --- Conversations (Multi-Chat) ---
-  async getConversations(projectId: string): Promise<ConversationRecord[]> {
+  async getConversations(projectId: string, userIdOverride?: string): Promise<ConversationRecord[]> {
+    const userId = userIdOverride || this.currentUser?.id;
+    if (!userId || !projectId) return [];
     try {
-      const data = await this.request(`/api/collections/conversations/records?filter=(projectId='${projectId}')&sort=-updated`);
-      return data.items || [];
+      const filter = encodeURIComponent(`(projectId='${projectId}' && userId='${userId}')`);
+      const data = await this.request(`/api/collections/conversations/records?filter=${filter}&sort=-updated`);
+      const items = data.items || [];
+      return items.filter((c: any) => c.userId === userId && c.projectId === projectId);
     } catch {
       return [];
     }
@@ -255,12 +304,14 @@ export class SolarchService {
   }
 
   async createConversation(conversation: Partial<ConversationRecord>): Promise<ConversationRecord> {
+    const userId = this.currentUser?.id || conversation.userId;
     return await this.request("/api/collections/conversations/records", {
       method: "POST",
       body: JSON.stringify({
         title: "New Conversation",
         archived: false,
         lastMessageAt: new Date().toISOString(),
+        userId,
         ...conversation
       })
     });
@@ -280,19 +331,25 @@ export class SolarchService {
   }
 
   // --- Generation Jobs ---
-  async getGenerationJobs(projectId: string): Promise<GenerationJobRecord[]> {
-    const data = await this.request(`/api/collections/generation_jobs/records?filter=(projectId='${projectId}')&sort=-created`);
-    return data.items || [];
+  async getGenerationJobs(projectId: string, userIdOverride?: string): Promise<GenerationJobRecord[]> {
+    const userId = userIdOverride || this.currentUser?.id;
+    if (!userId || !projectId) return [];
+    const filter = encodeURIComponent(`(projectId='${projectId}' && userId='${userId}')`);
+    const data = await this.request(`/api/collections/generation_jobs/records?filter=${filter}&sort=-created`);
+    const items = data.items || [];
+    return items.filter((j: any) => j.userId === userId && j.projectId === projectId);
   }
 
-  async getGenerationJobsByConversation(conversationId: string, projectId?: string): Promise<GenerationJobRecord[]> {
+  async getGenerationJobsByConversation(conversationId: string, projectId?: string, userIdOverride?: string): Promise<GenerationJobRecord[]> {
+    const userId = userIdOverride || this.currentUser?.id;
     try {
-      // Query all generation jobs for this project (or all if no projectId specified)
       const projFilter = projectId ? `?filter=(projectId='${projectId}')&sort=created&perPage=500` : "?sort=created&perPage=500";
       const data = await this.request(`/api/collections/generation_jobs/records${projFilter}`);
       const items: any[] = data.items || [];
 
       const filtered = items.filter(j => {
+        if (userId && j.userId && j.userId !== userId) return false;
+        if (projectId && j.projectId && j.projectId !== projectId) return false;
         if (j.conversationId === conversationId) return true;
         let styleObj: any = {};
         try {

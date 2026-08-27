@@ -23,19 +23,35 @@ processor = FFmpegMediaProcessor()
 @router.head("/media/audio/raw")
 @router.head("/audio/raw")
 def get_raw_audio_file(path: str):
-    """Serve synthesized or processed raw audio file with proper WAV headers."""
+    """Serve synthesized or processed raw audio file with strict security boundaries and proper WAV headers."""
     if not path or len(path.strip()) == 0:
         raise HTTPException(status_code=400, detail="Path parameter is required")
 
+    # Prevent path traversal attacks
+    if ".." in path:
+        raise HTTPException(status_code=403, detail="ACCESS_DENIED: Path traversal is forbidden")
 
     target_path = os.path.abspath(path)
     if not os.path.exists(target_path):
-        # Check relative to service storage
-        alt_path = os.path.join(os.getcwd(), path)
+        alt_path = os.path.abspath(os.path.join(os.getcwd(), path))
         if os.path.exists(alt_path):
             target_path = alt_path
         else:
-            raise HTTPException(status_code=404, detail=f"Audio file not found: {path}")
+            raise HTTPException(status_code=404, detail="Audio file not found")
+
+    # Validate that target_path is within project workspace storage boundaries
+    workspace_root = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
+    service_root = os.path.abspath(os.getcwd())
+    allowed_roots = [
+        os.path.abspath(os.path.join(service_root, "storage")),
+        os.path.abspath(os.path.join(workspace_root, "storage")),
+        os.path.abspath(os.path.join(workspace_root, "tests", "fixtures")),
+        os.path.abspath(os.path.join(service_root, "tests", "fixtures"))
+    ]
+
+    is_allowed = any(target_path.startswith(root) for root in allowed_roots)
+    if not is_allowed:
+        raise HTTPException(status_code=403, detail="ACCESS_DENIED: Access to file path outside authorized audio storage is forbidden")
 
     if os.path.getsize(target_path) == 0:
         raise HTTPException(status_code=500, detail="Generated audio file is empty (0 bytes)")

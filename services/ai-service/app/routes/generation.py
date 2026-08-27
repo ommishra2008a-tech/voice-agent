@@ -22,6 +22,8 @@ def generate_voice(req: VoiceGenerationRequest):
     engine = VoiceEngineRegistry.get_engine(req.model)
     res = engine.synthesize(req)
     if res.status == "FAILED":
+        if "VOICE_PROFILE_ACCESS_DENIED" in (res.error or ""):
+            raise HTTPException(status_code=403, detail=res.error)
         raise HTTPException(status_code=400, detail=res.error or "Voice synthesis failed")
     return res
 

@@ -160,6 +160,8 @@ class VoiceProfileCreateResponse(BaseModel):
 class VoiceProfilePreviewRequest(BaseModel):
     audio_path: Optional[str] = None
     voice_profile_id: Optional[str] = None
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
     preview_text: Optional[str] = "Hello, this is my saved voice preview."
     language: Optional[str] = "en"
     model: Optional[str] = "xtts-v2"

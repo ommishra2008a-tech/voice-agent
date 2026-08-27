@@ -195,7 +195,7 @@ def analyze_voice(req: VoiceAnalysisRequest):
 def generate_voice_preview(req: VoiceProfilePreviewRequest):
     """
     Generate a real speech preview from reference audio or profile before permanent saving.
-    Infers with XTTSv2 using NEW preview test text and validates audible speech.
+    Infers with XTTSv2 using NEW preview test text and validates audible speech with ownership check.
     """
     start_time = time.time()
     preview_text = req.preview_text or "Hello, this is my saved voice preview."
@@ -204,10 +204,19 @@ def generate_voice_preview(req: VoiceProfilePreviewRequest):
 
     ref_audio = None
     if req.audio_path and os.path.exists(req.audio_path):
+        if ".." in req.audio_path:
+            raise HTTPException(status_code=403, detail="Path traversal rejected")
         ref_audio = os.path.abspath(req.audio_path)
     elif req.voice_profile_id:
         engine = VoiceEngineRegistry.get_engine("xtts-v2")
-        ref_audio = engine._resolve_reference_audio(req.voice_profile_id)
+        try:
+            ref_audio = engine._resolve_reference_audio(
+                voice_profile_id=req.voice_profile_id,
+                project_id=req.project_id if hasattr(req, "project_id") else None,
+                user_id=req.user_id if hasattr(req, "user_id") else None
+            )
+        except PermissionError as e:
+            raise HTTPException(status_code=403, detail=str(e))
 
     if not ref_audio or not os.path.exists(ref_audio):
         raise HTTPException(
@@ -261,9 +270,16 @@ def generate_voice_preview(req: VoiceProfilePreviewRequest):
 
 
 @router.post("/profile/{profile_id}/preview", response_model=VoiceProfilePreviewResponse)
-def generate_profile_id_preview(profile_id: str, preview_text: Optional[str] = None):
+def generate_profile_id_preview(
+    profile_id: str,
+    user_id: Optional[str] = None,
+    project_id: Optional[str] = None,
+    preview_text: Optional[str] = None
+):
     req = VoiceProfilePreviewRequest(
         voice_profile_id=profile_id,
+        user_id=user_id,
+        project_id=project_id,
         preview_text=preview_text or "Hello, this is my saved voice preview."
     )
     return generate_voice_preview(req)
@@ -376,17 +392,63 @@ def create_voice_profile(req: VoiceProfileCreateRequest):
 
 
 @router.get("/profile/{profile_id}", response_model=VoiceProfileDetailResponse)
-def get_voice_profile_detail(profile_id: str):
-    """Retrieve details and reference linkage for a saved voice profile."""
+def get_voice_profile_detail(
+    profile_id: str,
+    user_id: Optional[str] = None,
+    project_id: Optional[str] = None
+):
+    """Retrieve details and reference linkage for a saved voice profile with ownership verification."""
+    rec_data = None
+    # 1. Query Solarch BaaS record for ownership validation
+    try:
+        import urllib.request
+        import urllib.error
+        import json
+        solarch_url = f"http://localhost:8090/api/collections/voice_profiles/records/{profile_id}"
+        req = urllib.request.Request(solarch_url, headers={"User-Agent": "VoiceEngine"})
+        try:
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                if resp.status == 200:
+                    rec_data = json.loads(resp.read().decode("utf-8"))
+                    if user_id and rec_data.get("userId") and rec_data.get("userId") != user_id:
+                        raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Voice profile belongs to another user")
+                    if project_id and rec_data.get("projectId") and rec_data.get("projectId") != project_id:
+                        raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Voice profile belongs to another project")
+        except urllib.error.HTTPError as he:
+            if he.code == 403:
+                raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Voice profile access forbidden")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"Solarch query in get_voice_profile_detail warning: {e}")
+
     profile_dir = os.path.join(PROFILE_STORAGE_DIR, profile_id)
     manifest_path = os.path.join(profile_dir, "profile.json")
 
-    primary_ref = os.path.join(profile_dir, "reference.wav")
-    if not os.path.exists(primary_ref):
-        primary_ref = os.path.join(VOICE_STORAGE_DIR, f"{profile_id}.wav")
+    primary_ref = None
+    if rec_data:
+        primary_ref = rec_data.get("primaryReferencePath") or rec_data.get("referenceAudio")
 
-    if not os.path.exists(primary_ref):
+    if not primary_ref or not os.path.exists(primary_ref):
+        primary_ref = os.path.join(profile_dir, "reference.wav")
+        if not os.path.exists(primary_ref):
+            primary_ref = os.path.join(VOICE_STORAGE_DIR, f"{profile_id}.wav")
+
+    if not primary_ref or not os.path.exists(primary_ref):
         raise HTTPException(status_code=404, detail=f"Voice profile '{profile_id}' not found in storage")
+
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                man = json.load(f)
+            if user_id and man.get("user_id") and man.get("user_id") != user_id:
+                raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Voice profile belongs to another user")
+            if project_id and man.get("project_id") and man.get("project_id") != project_id:
+                raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Voice profile belongs to another project")
+        except HTTPException:
+            raise
+        except Exception:
+            pass
 
     try:
         samples, sr, dur = ReferenceAudioLoader.load(primary_ref)
@@ -408,11 +470,13 @@ def get_voice_profile_detail(profile_id: str):
         except Exception:
             pass
 
+    profile_name = (rec_data.get("name") if rec_data else None) or f"Voice Profile {profile_id[:8]}"
+
     return VoiceProfileDetailResponse(
         status="READY" if quality.quality_gate_passed else "READY_WITH_LIMITATIONS",
         readiness_state="READY" if quality.quality_gate_passed else "READY_WITH_LIMITATIONS",
         voice_profile_id=profile_id,
-        name=f"Voice Profile {profile_id[:8]}",
+        name=profile_name,
         language="en",
         quality_score=quality.quality_score,
         profile_version="1.0.0",
@@ -429,6 +493,39 @@ def get_voice_profile_detail(profile_id: str):
         emotion=emotion,
         created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     )
+
+
+@router.delete("/profile/{profile_id}")
+def delete_voice_profile_endpoint(
+    profile_id: str,
+    user_id: Optional[str] = None,
+    project_id: Optional[str] = None
+):
+    """Delete a voice profile with strict ownership verification."""
+    # 1. Verify ownership via Solarch BaaS
+    try:
+        import urllib.request
+        import json
+        solarch_url = f"http://localhost:8090/api/collections/voice_profiles/records/{profile_id}"
+        req = urllib.request.Request(solarch_url, headers={"User-Agent": "VoiceEngine"})
+        with urllib.request.urlopen(req, timeout=1.0) as resp:
+            if resp.status == 200:
+                rec_data = json.loads(resp.read().decode("utf-8"))
+                if user_id and rec_data.get("userId") and rec_data.get("userId") != user_id:
+                    raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Cannot delete profile owned by another user")
+                if project_id and rec_data.get("projectId") and rec_data.get("projectId") != project_id:
+                    raise HTTPException(status_code=403, detail="VOICE_PROFILE_ACCESS_DENIED: Cannot delete profile in another project")
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
+    profile_dir = os.path.join(PROFILE_STORAGE_DIR, profile_id)
+    if os.path.exists(profile_dir):
+        import shutil
+        shutil.rmtree(profile_dir, ignore_errors=True)
+
+    return {"status": "DELETED", "voice_profile_id": profile_id}
 
 
 @router.post("/compare", response_model=VoiceCompareResponse)
