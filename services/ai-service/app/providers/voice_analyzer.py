@@ -838,6 +838,7 @@ class MultiSampleVoiceAggregator:
     def aggregate_and_persist(
         profile_id: str,
         audio_paths: List[str],
+        name: Optional[str] = None,
         target_speaker_id: str = "speaker_1",
         min_quality_score: float = 60.0,
         min_snr_db: float = 15.0,
@@ -1008,13 +1009,13 @@ class MultiSampleVoiceAggregator:
             primary_ref_dest, target_speaker_id, best_sample["samples"], best_sample["sr"]
         )
 
-        # Sample details list
+        # Build samples details list
         samples_details = [
             {
                 "sample_index": sa["sample_index"],
                 "audio_path": sa["path"],
-                "duration": sa["duration"],
                 "quality_score": sa["quality_score"],
+                "duration": sa["duration"],
                 "snr_db": sa["snr_db"],
                 "weight": round(w, 3)
             }
@@ -1024,6 +1025,8 @@ class MultiSampleVoiceAggregator:
         # Write profile manifest for instant durable lookup
         manifest = {
             "profile_id": profile_id,
+            "voice_profile_id": profile_id,
+            "name": name or profile_id,
             "target_speaker_id": target_speaker_id,
             "primary_reference_path": primary_ref_dest,
             "reference_audio_paths": durable_paths,

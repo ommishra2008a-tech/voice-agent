@@ -291,6 +291,7 @@ def create_voice_profile(req: VoiceProfileCreateRequest):
         agg_result = MultiSampleVoiceAggregator.aggregate_and_persist(
             profile_id=profile_id,
             audio_paths=req.audio_paths,
+            name=req.name,
             target_speaker_id=speaker_id,
             min_quality_score=req.min_quality_score or 60.0,
             min_snr_db=req.min_snr_db or 15.0,

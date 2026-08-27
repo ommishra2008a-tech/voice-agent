@@ -227,8 +227,11 @@ export default function VoiceChatStudio({
     try {
       const items = await solarch.getVoiceProfiles(project.id);
       setProfiles(items);
-      if (items.length > 0 && !selectedProfile) {
-        setSelectedProfile(items[0]);
+      const savedId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_id_${project.id}`) : null;
+      const savedName = typeof window !== "undefined" ? localStorage.getItem(`active_voice_name_${project.id}`) : null;
+      if (items.length > 0) {
+        const match = items.find((p) => (savedId && p.id === savedId) || (savedName && p.name === savedName));
+        setSelectedProfile(match || items[0]);
       }
     } catch (e) {}
   };
@@ -242,12 +245,19 @@ export default function VoiceChatStudio({
   };
 
   const handleProfileCreated = (newProfile: VoiceProfileRecord) => {
-    setProfiles((prev) => [newProfile, ...prev]);
-    setSelectedProfile(newProfile);
+    setProfiles((prev) => [newProfile, ...prev.filter((p) => p.id !== newProfile.id)]);
+    handleVoiceSelected(newProfile);
   };
 
   const handleVoiceSelected = (profile: VoiceProfileRecord) => {
     setSelectedProfile(profile);
+    if (project && typeof window !== "undefined") {
+      localStorage.setItem(`active_voice_id_${project.id}`, profile.id || "");
+      localStorage.setItem(`active_voice_name_${project.id}`, profile.name);
+      if (profile.primaryReferencePath) {
+        localStorage.setItem(`active_voice_ref_${project.id}`, profile.primaryReferencePath);
+      }
+    }
   };
 
   const handleScriptExtracted = (text: string) => {
@@ -716,6 +726,7 @@ export default function VoiceChatStudio({
       setMessages((prev) => [...prev, pendingDubMsg]);
 
       try {
+        const activeRef = selectedProfile?.primaryReferencePath || (selectedProfile?.referenceAudioPaths || [])[0];
         // Execute speech synthesis with the active voice for dubbed soundtrack
         const dubRes = await fetch("http://localhost:8000/v1/speech/generate", {
           method: "POST",
@@ -723,7 +734,8 @@ export default function VoiceChatStudio({
           body: JSON.stringify({
             project_id: projectId,
             user_id: userId,
-            voice_profile_id: profileId,
+            voice_profile_id: selectedProfile?.id || profileId,
+            reference_audio_path: activeRef || undefined,
             text: `[Synchronized Dubbed Track for ${activeContext.name}] Welcome to the dubbed presentation.`,
             model: model,
             language: targetLang,
@@ -780,13 +792,15 @@ export default function VoiceChatStudio({
     setActiveMonitorMsg(newAiMsg);
 
     try {
+      const activeRef = selectedProfile?.primaryReferencePath || (selectedProfile?.referenceAudioPaths || [])[0];
       const res = await fetch("http://localhost:8000/v1/speech/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project_id: projectId,
           user_id: userId,
-          voice_profile_id: profileId,
+          voice_profile_id: selectedProfile?.id || profileId,
+          reference_audio_path: activeRef || undefined,
           text: userText,
           model: model,
           language: language,
@@ -853,6 +867,7 @@ export default function VoiceChatStudio({
     setMessages((prev) => [...prev, pendingMsg]);
 
     try {
+      const activeRef = selectedProfile?.primaryReferencePath || (selectedProfile?.referenceAudioPaths || [])[0];
       const profileId = selectedProfile?.id || (profiles.length > 0 ? profiles[0].id : "mt8jhzowa74f845e");
       const res = await fetch("http://localhost:8000/v1/speech/generate", {
         method: "POST",
@@ -861,6 +876,7 @@ export default function VoiceChatStudio({
           project_id: project.id,
           user_id: project.userId || "u1",
           voice_profile_id: profileId,
+          reference_audio_path: activeRef || undefined,
           text: transMsg.translatedText,
           model: model,
           language: transMsg.targetLanguage || "es",

@@ -10,6 +10,7 @@ class VoiceGenerationRequest(BaseModel):
     project_id: str
     user_id: str
     voice_profile_id: str
+    reference_audio_path: Optional[str] = None
     text: str
     language: str = "en"  # "en" | "hi" | "es" | "fr" | etc.
     speed: float = 1.0     # 0.5 to 2.0

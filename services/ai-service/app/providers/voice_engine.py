@@ -114,6 +114,47 @@ class AudioValidator:
             return {"classification": "CORRUPTED", "valid_speech": False, "error": str(e)}
 
 
+class ReferenceAudioPreprocessor:
+    """Preprocesses reference audio to maximize XTTS v2 zero-shot cloning fidelity."""
+
+    _processor = FFmpegMediaProcessor()
+
+    @classmethod
+    def get_clean_reference(cls, input_audio_path: str) -> str:
+        if not input_audio_path or not os.path.exists(input_audio_path):
+            return input_audio_path
+
+        base, ext = os.path.splitext(input_audio_path)
+        clean_path = f"{base}_clean_24k.wav"
+
+        # Return cached preprocessed reference if it exists, is not empty, and is newer than source
+        if os.path.exists(clean_path) and os.path.getsize(clean_path) > 1024:
+            if os.path.getmtime(clean_path) >= os.path.getmtime(input_audio_path):
+                return clean_path
+
+        try:
+            # Normalize to 24kHz mono 16-bit PCM with mild silenceremove and peak normalization
+            cmd = [
+                cls._processor.ffmpeg_bin,
+                "-y",
+                "-i", input_audio_path,
+                "-vn",
+                "-af", "silenceremove=start_periods=1:start_duration=0.05:start_threshold=-45dB:detection=peak,areverse,silenceremove=start_periods=1:start_duration=0.05:start_threshold=-45dB:detection=peak,areverse,loudnorm=I=-16:TP=-1.5:LRA=11",
+                "-ar", "24000",
+                "-ac", "1",
+                "-c:a", "pcm_s16le",
+                clean_path
+            ]
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            if res.returncode == 0 and os.path.exists(clean_path) and os.path.getsize(clean_path) > 1024:
+                logger.info(f"[ReferenceAudioPreprocessor] Generated clean reference: {clean_path}")
+                return clean_path
+        except Exception as e:
+            logger.warning(f"[ReferenceAudioPreprocessor] Preprocessing fallback to source: {e}")
+
+        return input_audio_path
+
+
 class XTTSv2Adapter(VoiceEngine):
     """
     Real Coqui XTTS v2 Zero-Shot Voice Cloning Engine.
@@ -166,18 +207,19 @@ class XTTSv2Adapter(VoiceEngine):
         if not output_path:
             output_path = os.path.join(self.output_dir, f"{req_id}.{req.output_format}")
 
-        # Resolve reference audio for voice cloning
-        reference_audio = self._resolve_reference_audio(req.voice_profile_id)
+        # Resolve reference audio for voice cloning (accepts req.reference_audio_path or req.voice_profile_id)
+        reference_audio = self._resolve_reference_audio(req.voice_profile_id, req.reference_audio_path)
         if not reference_audio:
+            logger.error(f"[XTTSv2] VOICE_REFERENCE_UNAVAILABLE: Could not resolve reference audio for voice profile '{req.voice_profile_id}'. No generic fallback permitted.")
             return VoiceGenerationResponse(
                 request_id=req_id, status="FAILED", audio_path="", duration=0.0,
                 sample_rate=req.sample_rate, channels=1, format=req.output_format,
                 quality_score=0.0, model="xtts-v2", model_version="v2.0.4",
                 execution_time_ms=int((time.time() - start_time) * 1000),
-                error=f"ENGINE_REQUIRES_REFERENCE_AUDIO: No valid reference audio found for voice profile '{req.voice_profile_id}'"
+                error=f"VOICE_REFERENCE_UNAVAILABLE: No valid reference audio found for voice profile '{req.voice_profile_id}'. No generic fallback is permitted."
             )
 
-        logger.info(f"[XTTSv2] Synthesizing: text='{req.text[:50]}...', lang={req.language}, ref={reference_audio}")
+        logger.info(f"[XTTSv2] Active Saved Voice Conditioning: profile_id='{req.voice_profile_id}', resolved_ref='{reference_audio}', lang={req.language}, text='{req.text[:50]}...'")
 
         # Ensure model is loaded
         if not self._ensure_model():
@@ -193,7 +235,7 @@ class XTTSv2Adapter(VoiceEngine):
             # Normalize language code
             lang = self._normalize_language(req.language)
 
-            # Run actual XTTS v2 inference
+            # Run actual XTTS v2 inference with the resolved reference audio
             self._tts.tts_to_file(
                 text=req.text,
                 speaker_wav=reference_audio,
@@ -274,16 +316,23 @@ class XTTSv2Adapter(VoiceEngine):
                 error=f"XTTS v2 synthesis error: {str(e)}"
             )
 
-    def _resolve_reference_audio(self, voice_profile_id: str) -> Optional[str]:
-        """Resolve actual reference audio file path for voice cloning from durable storage."""
+    def _resolve_reference_audio(self, voice_profile_id: str, reference_audio_path: Optional[str] = None) -> Optional[str]:
+        """Resolve actual reference audio file path for voice cloning from durable storage without generic fallback."""
+        # 1. Direct explicit reference audio path passed in request
+        if reference_audio_path and os.path.exists(reference_audio_path) and os.path.getsize(reference_audio_path) > 1000:
+            logger.info(f"[XTTSv2] Resolved from explicit reference_audio_path: {reference_audio_path}")
+            return ReferenceAudioPreprocessor.get_clean_reference(reference_audio_path)
+
         if not voice_profile_id:
-            voice_profile_id = "default"
+            logger.warning("[XTTSv2] Empty voice_profile_id provided")
+            return None
 
-        # 1. Direct path check if passed directly
-        if os.path.isabs(voice_profile_id) and os.path.exists(voice_profile_id) and os.path.getsize(voice_profile_id) > 1000:
-            return voice_profile_id
+        # 2. Direct absolute or relative path check
+        if os.path.exists(voice_profile_id) and os.path.getsize(voice_profile_id) > 1000:
+            logger.info(f"[XTTSv2] Resolved from direct file path: {voice_profile_id}")
+            return ReferenceAudioPreprocessor.get_clean_reference(voice_profile_id)
 
-        # 2. Check profile metadata JSON if saved in durable storage
+        # 3. Check profile metadata JSON in durable storage
         profile_meta_path = os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id, "profile.json")
         if os.path.exists(profile_meta_path):
             try:
@@ -291,43 +340,100 @@ class XTTSv2Adapter(VoiceEngine):
                 with open(profile_meta_path, "r", encoding="utf-8") as f:
                     meta = json.load(f)
                 if meta.get("primary_reference_path") and os.path.exists(meta["primary_reference_path"]):
-                    return meta["primary_reference_path"]
+                    return ReferenceAudioPreprocessor.get_clean_reference(meta["primary_reference_path"])
                 if meta.get("reference_audio_paths"):
                     for ref_p in meta["reference_audio_paths"]:
                         if os.path.exists(ref_p) and os.path.getsize(ref_p) > 1000:
-                            return ref_p
+                            return ReferenceAudioPreprocessor.get_clean_reference(ref_p)
             except Exception as meta_err:
                 logger.warning(f"Failed to read profile manifest for {voice_profile_id}: {meta_err}")
 
-        # 3. Comprehensive directory search paths
-        search_paths = [
+        # 4. Check standard durable storage files for this voice_profile_id
+        direct_storage_candidates = [
             os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id, "reference.wav"),
             os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id, "sample_1.wav"),
             os.path.join(os.getcwd(), "storage", "voice_profiles", f"{voice_profile_id}.wav"),
             os.path.join(os.getcwd(), "storage", "voices", f"{voice_profile_id}.wav"),
             os.path.join(os.getcwd(), "storage", "voices", f"ref_{voice_profile_id}.wav"),
             os.path.join(os.getcwd(), "storage", "voices", voice_profile_id),
-            os.path.join(os.getcwd(), "..", "..", "tests", "fixtures", "real_speech_reference_24k.wav"),
-            os.path.join(os.getcwd(), "..", "..", "tests", "fixtures", "real_speech_reference.wav"),
-            os.path.join(os.getcwd(), "..", "..", "tests", "fixtures", "sample_speech.wav"),
         ]
-
-        for p in search_paths:
+        for p in direct_storage_candidates:
             abs_p = os.path.abspath(p)
             if os.path.exists(abs_p) and os.path.getsize(abs_p) > 1000:
-                logger.info(f"[XTTSv2] Resolved reference audio: {abs_p}")
-                return abs_p
+                logger.info(f"[XTTSv2] Resolved from storage candidate: {abs_p}")
+                return ReferenceAudioPreprocessor.get_clean_reference(abs_p)
 
-        # 4. Check if profile folder contains any .wav files
+        # 5. Query Solarch BaaS PocketBase record by ID or Name
+        try:
+            import urllib.request
+            import urllib.parse
+            import json
+
+            # Try direct record fetch by ID
+            solarch_url = f"http://localhost:8090/api/collections/voice_profiles/records/{voice_profile_id}"
+            req = urllib.request.Request(solarch_url, headers={"User-Agent": "VoiceEngine"})
+            try:
+                with urllib.request.urlopen(req, timeout=1.0) as resp:
+                    if resp.status == 200:
+                        rec_data = json.loads(resp.read().decode("utf-8"))
+                        p_ref = rec_data.get("primaryReferencePath") or (rec_data.get("referenceAudioPaths") or [None])[0]
+                        if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
+                            logger.info(f"[XTTSv2] Resolved from Solarch BaaS record: {p_ref}")
+                            return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
+            except Exception:
+                pass
+
+            # Try search filter by name or voiceProfileId
+            filter_expr = urllib.parse.quote(f"(name='{voice_profile_id}' || id='{voice_profile_id}')")
+            query_url = f"http://localhost:8090/api/collections/voice_profiles/records?filter={filter_expr}"
+            req2 = urllib.request.Request(query_url, headers={"User-Agent": "VoiceEngine"})
+            try:
+                with urllib.request.urlopen(req2, timeout=1.0) as resp2:
+                    if resp2.status == 200:
+                        query_data = json.loads(resp2.read().decode("utf-8"))
+                        items = query_data.get("items", [])
+                        if items:
+                            first_item = items[0]
+                            p_ref = first_item.get("primaryReferencePath") or (first_item.get("referenceAudioPaths") or [None])[0]
+                            if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
+                                logger.info(f"[XTTSv2] Resolved from Solarch BaaS query: {p_ref}")
+                                return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
+            except Exception:
+                pass
+        except Exception as solarch_err:
+            logger.warning(f"[XTTSv2] Solarch lookup failed: {solarch_err}")
+
+        # 6. Check all subdirectories in storage/voice_profiles to match by name in profile.json
+        base_profiles_dir = os.path.join(os.getcwd(), "storage", "voice_profiles")
+        if os.path.isdir(base_profiles_dir):
+            try:
+                import json
+                for sub in os.listdir(base_profiles_dir):
+                    sub_dir = os.path.join(base_profiles_dir, sub)
+                    manifest_p = os.path.join(sub_dir, "profile.json")
+                    if os.path.exists(manifest_p):
+                        with open(manifest_p, "r", encoding="utf-8") as mf:
+                            m = json.load(mf)
+                        m_name = m.get("name", "").strip().lower()
+                        target_id = voice_profile_id.strip().lower()
+                        if m_name == target_id or m.get("voice_profile_id") == voice_profile_id or m.get("profile_id") == voice_profile_id or sub.lower() == target_id:
+                            ref_p = m.get("primary_reference_path") or os.path.join(sub_dir, "reference.wav")
+                            if os.path.exists(ref_p) and os.path.getsize(ref_p) > 1000:
+                                logger.info(f"[XTTSv2] Resolved by name/id '{voice_profile_id}' to manifest ref: {ref_p}")
+                                return ReferenceAudioPreprocessor.get_clean_reference(ref_p)
+            except Exception as scan_err:
+                logger.warning(f"[XTTSv2] Storage profiles scan error: {scan_err}")
+
+        # 7. Check if profile folder contains any .wav files
         profile_dir = os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id)
         if os.path.isdir(profile_dir):
             for fname in os.listdir(profile_dir):
                 if fname.lower().endswith(".wav"):
                     sample_path = os.path.join(profile_dir, fname)
                     if os.path.getsize(sample_path) > 1000:
-                        return sample_path
+                        return ReferenceAudioPreprocessor.get_clean_reference(sample_path)
 
-        logger.error(f"[XTTSv2] No reference audio found for profile '{voice_profile_id}'. Searched: {search_paths}")
+        logger.error(f"[XTTSv2] VOICE_REFERENCE_UNAVAILABLE: No valid reference audio found for voice profile '{voice_profile_id}'. Strict non-fallback policy enforced.")
         return None
 
     @staticmethod
