@@ -70,13 +70,29 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
   const loadProjects = async () => {
     try {
-      const items = await solarch.getProjects();
-      setProjects(items);
-      if (items.length > 0 && !selectedProject) {
-        setSelectedProject(items[0]);
-        loadProfiles(items[0].id);
+      let items = await solarch.getProjects();
+      if (items.length === 0) {
+        try {
+          const curUser = solarch.getUser();
+          const defaultProj = await solarch.createProject("Voice AI Workspace", "Default workspace for voice chat and cloning");
+          items = [defaultProj];
+        } catch (pErr) {
+          console.warn("Failed to create default project:", pErr);
+        }
       }
-    } catch (e) {}
+      setProjects(items);
+      if (items.length > 0) {
+        const savedProjId = typeof window !== "undefined" ? localStorage.getItem("selected_project_id") : null;
+        const matched = (savedProjId && items.find(p => p.id === savedProjId)) || items[0];
+        setSelectedProject(matched);
+        if (typeof window !== "undefined" && matched?.id) {
+          localStorage.setItem("selected_project_id", matched.id);
+        }
+        loadProfiles(matched.id);
+      }
+    } catch (e) {
+      console.warn("loadProjects error:", e);
+    }
   };
 
   const loadProfiles = async (projectId: string) => {

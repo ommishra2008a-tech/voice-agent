@@ -1,67 +1,69 @@
-# Chat History Persistence Design
+# Chat History Persistence & Multi-Chat Architecture
 
 ## 1. Overview
-The Voice Chat Studio chat history is designed to be fully persistent across browser refresh, page reloads, and multi-session workflows. Chat messages and generated speech outputs are backed by **Solarch BaaS PocketBase** collections rather than volatile browser memory or temporary blob URLs.
+The Voice AI Chat Studio provides complete, durable conversation persistence across browser refresh, session changes, and account logins. All conversations, chat messages, and generated speech outputs are backed by **Solarch BaaS PocketBase** collections rather than volatile browser memory or temporary blob URLs.
 
 ---
 
-## 2. Persistence Architecture
+## 2. Persistence Architecture & Hierarchy
 
-### Schema Linkage
 ```
-Solarch BaaS PocketBase
-├── generation_jobs (Collection)
-│    ├── id (Job ID / Generation ID)
-│    ├── projectId (Project scope)
-│    ├── userId (User identity)
-│    ├── voiceProfileId (Canonical Voice Profile Record ID)
-│    ├── text (User input / Synthesized script)
-│    ├── targetLanguage (Synthesis language code: en, es, hi, etc.)
-│    ├── styleParams (JSON: model, speed, pitch, emotion, voiceName)
-│    ├── status (PROCESSING | COMPLETED | FAILED)
-│    ├── outputAssetId (Durable server file path to generated WAV)
-│    ├── executionTimeMs (Synthesis execution time)
-│    └── created / updated (Timestamps)
-└── voice_profiles (Collection)
-     ├── id (Canonical Voice ID)
-     ├── name (User-assigned voice label)
-     ├── primaryReferencePath (Reference WAV path)
-     └── speakerEmbedding (Speaker conditioning vectors)
+User (userId)
+ └── Project (projectId)
+      └── Conversation (conversations collection)
+           ├── id (Solarch Record ID)
+           ├── title (Auto-generated from first prompt or user-renamed)
+           ├── lastMessageAt (ISO timestamp)
+           ├── archived (boolean)
+           └── Generation Jobs (generation_jobs collection)
+                ├── id (Job ID / Generation ID)
+                ├── projectId & userId (Scoping)
+                ├── voiceProfileId (Canonical Voice Profile Record ID)
+                ├── text (User prompt / Synthesized text)
+                ├── targetLanguage (Language code)
+                ├── styleParams (JSON containing model, speed, pitch, emotion, voiceName, conversationId, expiresAt)
+                ├── status (PROCESSING | COMPLETED | FAILED)
+                ├── outputAssetId (Durable server file path to generated WAV)
+                └── executionTimeMs & created/updated timestamps
 ```
 
 ---
 
-## 3. Browser Refresh & Session Recovery Behavior
+## 3. Key Runtime Mechanisms
 
-1. **Initial Mount & Project Change**:
-   - `VoiceChatStudio` queries `solarch.getVoiceProfiles(projectId)` to load existing saved voices.
-   - `VoiceChatStudio` calls `loadChatHistory()` which retrieves all `generation_jobs` filtered by `projectId` from PocketBase.
-   - Jobs are mapped chronologically to reconstruct:
-     - User message cards (Text + Timestamp)
-     - AI Voice message cards (Text + Voice Profile Name + Model + Duration + Speed + Durable Audio URL).
-2. **Audio Streaming & Playback**:
-   - Reconstructed cards access audio via:
+### 1. Robust `conversationId` Persistence in `styleParams`
+To maintain full compatibility with the 12 canonical fields of `generation_jobs`, `conversationId` and `expiresAt` are reliably embedded inside `styleParams` JSON:
+- `solarch.createGenerationJob` automatically merges `conversationId` and `expiresAt` into `styleParams`.
+- `solarch.updateGenerationJob` preserves `conversationId` and `expiresAt` during status updates.
+- `solarch.getGenerationJobsByConversation` queries records by `projectId` with `perPage=500` and filters by matching `conversationId` in both top-level and `styleParams`.
+
+### 2. Recent Chats Sidebar & Navigation
+- **`[+ New Chat]`**: Creates a real record in the `conversations` collection in Solarch and assigns an isolated conversation ID.
+- **Auto-Naming**: The first user prompt in a `"New Conversation"` automatically updates the title in Solarch.
+- **Date Grouping**: Chats are dynamically categorized into **Today**, **Yesterday**, and **Older** based on real timestamps.
+- **Inline Rename & Delete**: Allows editing titles and deleting conversations with confirmation dialogs.
+
+### 3. Session & Refresh Recovery
+On application mount / reload:
+1. `Dashboard` loads or creates the default project and initializes `VoiceChatStudio`.
+2. `VoiceChatStudio` queries `solarch.getConversations(projectId)`.
+3. Loads the active conversation or defaults to the most recent one.
+4. Queries `solarch.getGenerationJobsByConversation(conversationId, projectId)` and reconstructs the exact message sequence:
+   - User message bubbles (`user_${job.id}`)
+   - AI Generated audio cards (`ai_${job.id}`) with durable streaming URLs:
      `http://localhost:8000/v1/media/audio/raw?path=${encodeURIComponent(outputAssetId)}`
-   - Playback, replay, speed adjustments, and download work out of the box.
+   - Sets the active audio monitor to the last generated speech response.
 
 ---
 
-## 4. Missing / Deleted Audio Handling (Zero-Fabrication Rule)
+## 4. Verified Acceptance Criteria
 
-- If a generated audio file was removed from disk, the `<audio>` tag triggers `onError`.
-- The UI gracefully falls back to displaying:
-  > **⚠️ Audio no longer available** (along with Job ID / Output Asset ID metadata).
-- The system **never fabricates** synthetic replacements or deletes historical message records.
-
----
-
-## 5. Diagnostic Retrieval Path
-
-The diagnostic CLI tool `scripts/voice-fidelity-diagnostic.js` can look up any historical generation:
-```bash
-node scripts/voice-fidelity-diagnostic.js --generation-id gen_1787833546649
-```
-Outputs:
-- Target audio file presence on disk & Solarch BaaS
-- Audio format, sample rate, bit depth, channel count, duration
-- External reference audio path & status
+| Check | Scenario | Verification Result |
+| :--- | :--- | :--- |
+| **TEST A** | New Chat $\to$ Send prompt $\to$ Audio generated | **PASS** (Saved as "Hello from Chat A", 3.2s audio) |
+| **TEST B** | New Chat $\to$ Send prompt $\to$ Audio generated | **PASS** (Saved as "This is Chat B", 1.5s audio) |
+| **TEST C** | Click Chat A in sidebar | **PASS** (Only Chat A messages and audio card visible) |
+| **TEST D** | Click Chat B in sidebar | **PASS** (Only Chat B messages and audio card visible) |
+| **TEST E** | Refresh browser (`http://localhost:3000`) | **PASS** (Both chats persist in sidebar) |
+| **TEST F** | Reopen / Reload session | **PASS** (Recent chats list and historical messages restored) |
+| **TEST G** | Audio playback on restored cards | **PASS** (Durable streaming endpoint operational) |

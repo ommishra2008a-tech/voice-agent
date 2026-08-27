@@ -317,6 +317,8 @@ export default function VoiceChatStudio({
 
   const loadConversations = async (activeProfiles?: VoiceProfileRecord[]) => {
     if (!project) return;
+    const currentUserId = project.userId || solarch.getUser()?.id || "u1";
+    console.log("[VoiceChatStudio] Loading conversations for project:", project.id, "user:", currentUserId);
     try {
       const convs = await solarch.getConversations(project.id);
       setConversations(convs);
@@ -329,7 +331,7 @@ export default function VoiceChatStudio({
       } else {
         const initialConv = await solarch.createConversation({
           projectId: project.id,
-          userId: project.userId || solarch.getUser()?.id || "u1",
+          userId: currentUserId,
           title: "New Conversation"
         });
         targetConv = initialConv;
@@ -345,7 +347,7 @@ export default function VoiceChatStudio({
         await loadConversationMessages(targetConv.id, activeProfiles);
       }
     } catch (e) {
-      console.warn("loadConversations error:", e);
+      console.warn("[VoiceChatStudio] loadConversations error:", e);
     }
   };
 
@@ -1096,6 +1098,15 @@ export default function VoiceChatStudio({
     const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
     const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || profileId;
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const styleParamsPayload = JSON.stringify({
+      model,
+      speed,
+      pitch,
+      emotion,
+      voiceName: activeVoiceName,
+      conversationId: curConv?.id,
+      expiresAt
+    });
 
     let jobRecord: any = null;
     try {
@@ -1106,7 +1117,7 @@ export default function VoiceChatStudio({
         voiceProfileId: selectedProfile?.id || activeProfileId,
         text: userText,
         targetLanguage: language,
-        styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+        styleParams: styleParamsPayload,
         expiresAt,
         status: "PROCESSING"
       });
@@ -1145,7 +1156,7 @@ export default function VoiceChatStudio({
             voiceProfileId: selectedProfile?.id || activeProfileId,
             text: userText,
             targetLanguage: language,
-            styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+            styleParams: styleParamsPayload,
             status: "COMPLETED",
             outputAssetId: data.audio_path,
             expiresAt,
@@ -1236,6 +1247,15 @@ export default function VoiceChatStudio({
     const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
     const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || "default";
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const styleParamsPayload = JSON.stringify({
+      model,
+      speed,
+      pitch,
+      emotion,
+      voiceName: activeVoiceName,
+      conversationId: activeConversation?.id,
+      expiresAt
+    });
 
     let jobRecord: any = null;
     try {
@@ -1246,7 +1266,7 @@ export default function VoiceChatStudio({
         voiceProfileId: selectedProfile?.id || activeProfileId,
         text: transMsg.translatedText,
         targetLanguage: transMsg.targetLanguage || "es",
-        styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+        styleParams: styleParamsPayload,
         expiresAt,
         status: "PROCESSING"
       });
@@ -1284,7 +1304,7 @@ export default function VoiceChatStudio({
             voiceProfileId: selectedProfile?.id || activeProfileId,
             text: transMsg.translatedText,
             targetLanguage: transMsg.targetLanguage || "es",
-            styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+            styleParams: styleParamsPayload,
             status: "COMPLETED",
             outputAssetId: data.audio_path,
             expiresAt,

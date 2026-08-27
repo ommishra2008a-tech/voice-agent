@@ -287,18 +287,12 @@ export class SolarchService {
 
   async getGenerationJobsByConversation(conversationId: string, projectId?: string): Promise<GenerationJobRecord[]> {
     try {
-      let data: any;
-      try {
-        const filter = encodeURIComponent(`conversationId='${conversationId}'`);
-        data = await this.request(`/api/collections/generation_jobs/records?filter=${filter}&sort=created`);
-        if (data.items && data.items.length > 0) return data.items;
-      } catch {}
+      // Query all generation jobs for this project (or all if no projectId specified)
+      const projFilter = projectId ? `?filter=(projectId='${projectId}')&sort=created&perPage=500` : "?sort=created&perPage=500";
+      const data = await this.request(`/api/collections/generation_jobs/records${projFilter}`);
+      const items: any[] = data.items || [];
 
-      // Resilient fallback: query all project jobs and filter by conversationId or styleParams.conversationId
-      const projFilter = projectId ? `?filter=(projectId='${projectId}')&sort=created` : "?sort=created";
-      data = await this.request(`/api/collections/generation_jobs/records${projFilter}`);
-      const items: GenerationJobRecord[] = data.items || [];
-      return items.filter(j => {
+      const filtered = items.filter(j => {
         if (j.conversationId === conversationId) return true;
         let styleObj: any = {};
         try {
@@ -306,25 +300,74 @@ export class SolarchService {
         } catch {}
         return styleObj?.conversationId === conversationId;
       });
-    } catch {
+
+      return filtered.map(j => {
+        let styleObj: any = {};
+        try {
+          styleObj = typeof j.styleParams === "string" ? JSON.parse(j.styleParams) : (j.styleParams || {});
+        } catch {}
+        return {
+          ...j,
+          conversationId: j.conversationId || styleObj?.conversationId,
+          expiresAt: j.expiresAt || styleObj?.expiresAt
+        };
+      });
+    } catch (err) {
+      console.warn("getGenerationJobsByConversation error:", err);
       return [];
     }
   }
 
   async createGenerationJob(job: Partial<GenerationJobRecord>): Promise<any> {
+    let styleObj: any = {};
+    if (job.styleParams) {
+      try {
+        styleObj = typeof job.styleParams === "string" ? JSON.parse(job.styleParams) : { ...job.styleParams };
+      } catch {
+        styleObj = {};
+      }
+    }
+    if (job.conversationId && !styleObj.conversationId) {
+      styleObj.conversationId = job.conversationId;
+    }
+    if (job.expiresAt && !styleObj.expiresAt) {
+      styleObj.expiresAt = job.expiresAt;
+    }
+    const payload: any = {
+      status: "PENDING",
+      ...job,
+      styleParams: JSON.stringify(styleObj)
+    };
     return await this.request("/api/collections/generation_jobs/records", {
       method: "POST",
-      body: JSON.stringify({
-        status: "PENDING",
-        ...job
-      })
+      body: JSON.stringify(payload)
     });
   }
 
   async updateGenerationJob(id: string, updates: Partial<GenerationJobRecord>): Promise<any> {
+    let styleObj: any = {};
+    if (updates.styleParams) {
+      try {
+        styleObj = typeof updates.styleParams === "string" ? JSON.parse(updates.styleParams) : { ...updates.styleParams };
+      } catch {
+        styleObj = {};
+      }
+    }
+    if (updates.conversationId && !styleObj.conversationId) {
+      styleObj.conversationId = updates.conversationId;
+    }
+    if (updates.expiresAt && !styleObj.expiresAt) {
+      styleObj.expiresAt = updates.expiresAt;
+    }
+    const payload: any = {
+      ...updates
+    };
+    if (Object.keys(styleObj).length > 0) {
+      payload.styleParams = JSON.stringify(styleObj);
+    }
     return await this.request(`/api/collections/generation_jobs/records/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(updates)
+      body: JSON.stringify(payload)
     });
   }
 
