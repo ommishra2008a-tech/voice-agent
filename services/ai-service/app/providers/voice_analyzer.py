@@ -913,12 +913,29 @@ class MultiSampleVoiceAggregator:
         best_sample_idx = int(np.argmax([sa["quality_score"] for sa in sample_analyses]))
         best_sample = sample_analyses[best_sample_idx]
 
-        # Copy best sample as primary reference.wav
+        # Copy best sample as primary reference.wav — stored as 24kHz mono for optimal XTTSv2 conditioning
         primary_ref_dest = os.path.join(storage_base, "reference.wav")
         try:
-            shutil.copy2(best_sample["path"], primary_ref_dest)
+            # Convert to 24kHz mono PCM WAV (XTTSv2 native format) to avoid
+            # degradation from later format conversion of 44100Hz stereo files
+            from app.providers.ffmpeg_processor import FFmpegMediaProcessor
+            _ffmpeg = FFmpegMediaProcessor()
+            import subprocess as _sp
+            _conv_cmd = [
+                _ffmpeg.ffmpeg_bin, "-y",
+                "-i", best_sample["path"],
+                "-vn",
+                "-ar", "24000",
+                "-ac", "1",
+                "-c:a", "pcm_s16le",
+                primary_ref_dest
+            ]
+            _conv_res = _sp.run(_conv_cmd, capture_output=True, text=True, timeout=15)
+            if _conv_res.returncode != 0 or not os.path.exists(primary_ref_dest) or os.path.getsize(primary_ref_dest) < 1024:
+                # Fallback to direct copy if conversion fails
+                shutil.copy2(best_sample["path"], primary_ref_dest)
         except Exception:
-            primary_ref_dest = best_sample["path"]
+            shutil.copy2(best_sample["path"], primary_ref_dest)
 
         # Weighted Pitch stats
         agg_f0_mean = round(float(sum(sa["pitch"].f0_mean * w for sa, w in zip(sample_analyses, weights))), 2)

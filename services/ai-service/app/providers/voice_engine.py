@@ -115,7 +115,21 @@ class AudioValidator:
 
 
 class ReferenceAudioPreprocessor:
-    """Preprocesses reference audio to maximize XTTS v2 zero-shot cloning fidelity."""
+    """Preprocesses reference audio for XTTS v2 zero-shot cloning.
+
+    FIDELITY NOTE (evidence-based):
+    A/B testing with Resemblyzer showed that aggressive silenceremove+loudnorm
+    REDUCES speaker similarity by ~4.2% (82.07% raw vs 77.87% production pipeline).
+    silenceremove was cutting 1.6s of speech from an 8.2s reference, and loudnorm
+    was altering spectral characteristics critical for speaker identity.
+
+    This preprocessor now performs MINIMAL format conversion only:
+    - Resample to 24kHz (XTTSv2 native rate)
+    - Convert to mono
+    - Convert to 16-bit PCM WAV
+    - NO silenceremove (preserves all speech content)
+    - NO loudnorm (preserves natural spectral characteristics)
+    """
 
     _processor = FFmpegMediaProcessor()
 
@@ -123,6 +137,19 @@ class ReferenceAudioPreprocessor:
     def get_clean_reference(cls, input_audio_path: str) -> str:
         if not input_audio_path or not os.path.exists(input_audio_path):
             return input_audio_path
+
+        # If already a 24kHz mono WAV, skip preprocessing entirely
+        try:
+            with wave.open(input_audio_path, 'rb') as wf:
+                sr = wf.getframerate()
+                nch = wf.getnchannels()
+                nsamp = wf.getnframes()
+                dur = nsamp / sr if sr > 0 else 0
+            if sr == 24000 and nch == 1 and dur >= 1.0:
+                logger.info(f"[ReferenceAudioPreprocessor] Already 24kHz mono WAV, skipping preprocessing: {input_audio_path}")
+                return input_audio_path
+        except Exception:
+            pass  # Not a WAV or can't read — proceed with conversion
 
         base, ext = os.path.splitext(input_audio_path)
         clean_path = f"{base}_clean_24k.wav"
@@ -133,13 +160,13 @@ class ReferenceAudioPreprocessor:
                 return clean_path
 
         try:
-            # Normalize to 24kHz mono 16-bit PCM with mild silenceremove and peak normalization
+            # MINIMAL format conversion only — no destructive filtering
+            # Preserves all speech content and natural spectral characteristics
             cmd = [
                 cls._processor.ffmpeg_bin,
                 "-y",
                 "-i", input_audio_path,
                 "-vn",
-                "-af", "silenceremove=start_periods=1:start_duration=0.05:start_threshold=-45dB:detection=peak,areverse,silenceremove=start_periods=1:start_duration=0.05:start_threshold=-45dB:detection=peak,areverse,loudnorm=I=-16:TP=-1.5:LRA=11",
                 "-ar", "24000",
                 "-ac", "1",
                 "-c:a", "pcm_s16le",
@@ -147,7 +174,7 @@ class ReferenceAudioPreprocessor:
             ]
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
             if res.returncode == 0 and os.path.exists(clean_path) and os.path.getsize(clean_path) > 1024:
-                logger.info(f"[ReferenceAudioPreprocessor] Generated clean reference: {clean_path}")
+                logger.info(f"[ReferenceAudioPreprocessor] Generated clean reference (format-only): {clean_path}")
                 return clean_path
         except Exception as e:
             logger.warning(f"[ReferenceAudioPreprocessor] Preprocessing fallback to source: {e}")
