@@ -65,8 +65,12 @@ export interface GenerationJobRecord {
   styleParams?: any;
   emotionParam?: string;
   status: "PENDING" | "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+  outputAssetId?: string;
+  error?: string;
+  executionTimeMs?: number;
   audioUrl?: string;
   created?: string;
+  updated?: string;
 }
 
 export class SolarchService {
@@ -243,6 +247,24 @@ export class SolarchService {
 
   async updateJob(id: string, updates: any): Promise<any> {
     return await this.updateGenerationJob(id, updates);
+  }
+
+  async getGenerationJobById(id: string): Promise<GenerationJobRecord | null> {
+    try {
+      return await this.request(`/api/collections/generation_jobs/records/${id}`);
+    } catch {
+      return null;
+    }
+  }
+
+  async getGenerationJobByOutputAsset(assetNameOrPath: string): Promise<GenerationJobRecord | null> {
+    try {
+      const filter = encodeURIComponent(`(outputAssetId~'${assetNameOrPath}' || id='${assetNameOrPath}')`);
+      const data = await this.request(`/api/collections/generation_jobs/records?filter=${filter}`);
+      return (data.items && data.items.length > 0) ? data.items[0] : null;
+    } catch {
+      return null;
+    }
   }
 
   // --- Benchmark Runs ---

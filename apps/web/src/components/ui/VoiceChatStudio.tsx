@@ -96,6 +96,10 @@ interface ChatMessage {
   error?: string;
   evalResult?: any;
   analysisResult?: VoiceAnalysisResult;
+  generationJobId?: string;
+  outputAssetId?: string;
+  voiceProfileId?: string;
+  speed?: number;
 }
 
 // Client-side WAV Encoder for Instant Speed-Shifted Rendering
@@ -222,6 +226,68 @@ export default function VoiceChatStudio({
     }
   }, [project]);
 
+  const loadChatHistory = async (profilesList?: VoiceProfileRecord[]) => {
+    if (!project) return;
+    try {
+      const activeProfiles = profilesList || profiles;
+      const jobs = await solarch.getGenerationJobs(project.id);
+      if (!jobs || jobs.length === 0) return;
+
+      // Reverse to render in chronological order (oldest to newest)
+      const chronological = [...jobs].reverse();
+      const restoredMessages: ChatMessage[] = [];
+
+      for (const job of chronological) {
+        let styleParsed: any = {};
+        try {
+          styleParsed = typeof job.styleParams === "string" ? JSON.parse(job.styleParams) : (job.styleParams || {});
+        } catch (e) {}
+
+        const timeStr = job.created ? new Date(job.created).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+        const matchedProfile = activeProfiles.find((p) => p.id === job.voiceProfileId || p.voiceProfileId === job.voiceProfileId || p.name === job.voiceProfileId);
+        const resolvedVoiceName = matchedProfile?.name || styleParsed?.voiceName || "Saved Voice";
+
+        // Reconstruct user prompt
+        restoredMessages.push({
+          id: `user_${job.id}`,
+          sender: "user",
+          text: job.text,
+          timestamp: timeStr
+        });
+
+        // Reconstruct AI generated audio card
+        const audioUrl = job.outputAssetId
+          ? (job.outputAssetId.startsWith("http") ? job.outputAssetId : `http://localhost:8000/v1/media/audio/raw?path=${encodeURIComponent(job.outputAssetId)}`)
+          : undefined;
+
+        restoredMessages.push({
+          id: `ai_${job.id}`,
+          sender: "ai",
+          type: "voice",
+          text: job.text,
+          timestamp: timeStr,
+          voiceName: resolvedVoiceName,
+          model: styleParsed?.model || "xtts-v2",
+          language: job.targetLanguage || "en",
+          status: job.status === "FAILED" ? "ERROR" : "COMPLETED",
+          audioUrl: audioUrl,
+          duration: job.executionTimeMs ? job.executionTimeMs / 1000 : 3.0,
+          generationJobId: job.id,
+          outputAssetId: job.outputAssetId,
+          voiceProfileId: job.voiceProfileId,
+          speed: styleParsed?.speed || 1.0,
+          error: job.error || (job.status === "FAILED" ? "Voice generation failed" : undefined)
+        });
+      }
+
+      if (restoredMessages.length > 0) {
+        setMessages(restoredMessages);
+      }
+    } catch (err) {
+      console.warn("Failed to load chat history from Solarch:", err);
+    }
+  };
+
   const loadProfiles = async () => {
     if (!project) return;
     try {
@@ -238,6 +304,7 @@ export default function VoiceChatStudio({
         );
         setSelectedProfile(match || items[0]);
       }
+      await loadChatHistory(items);
     } catch (e) {}
   };
 
@@ -827,10 +894,25 @@ export default function VoiceChatStudio({
     setMessages((prev) => [...prev, newAiMsg]);
     setActiveMonitorMsg(newAiMsg);
 
-    try {
-      const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
-      const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || profileId;
+    const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
+    const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || profileId;
 
+    let jobRecord: any = null;
+    try {
+      jobRecord = await solarch.createGenerationJob({
+        projectId,
+        userId,
+        voiceProfileId: selectedProfile?.id || activeProfileId,
+        text: userText,
+        targetLanguage: language,
+        styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+        status: "PROCESSING"
+      });
+    } catch (jobErr) {
+      console.warn("Solarch createGenerationJob warning:", jobErr);
+    }
+
+    try {
       const res = await fetch("http://localhost:8000/v1/speech/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -853,11 +935,29 @@ export default function VoiceChatStudio({
       if (res.ok && data.status === "COMPLETED" && data.audio_path) {
         const audioUrl = `http://localhost:8000/v1/media/audio/raw?path=${encodeURIComponent(data.audio_path)}`;
 
+        if (jobRecord?.id) {
+          solarch.updateGenerationJob(jobRecord.id, {
+            projectId,
+            userId,
+            voiceProfileId: selectedProfile?.id || activeProfileId,
+            text: userText,
+            targetLanguage: language,
+            styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+            status: "COMPLETED",
+            outputAssetId: data.audio_path,
+            executionTimeMs: data.duration ? Math.round(data.duration * 1000) : 3000
+          }).catch(() => {});
+        }
+
         const completedMsg: ChatMessage = {
           ...newAiMsg,
           status: "COMPLETED",
           audioUrl,
           duration: data.duration || 3.0,
+          generationJobId: jobRecord?.id,
+          outputAssetId: data.audio_path,
+          voiceProfileId: activeProfileId,
+          speed,
           evalResult: data.metadata?.evaluation || null
         };
 
@@ -866,9 +966,21 @@ export default function VoiceChatStudio({
         );
         setActiveMonitorMsg(completedMsg);
       } else {
+        if (jobRecord?.id) {
+          solarch.updateGenerationJob(jobRecord.id, {
+            status: "FAILED",
+            error: data.detail || data.error || "Generation failed"
+          }).catch(() => {});
+        }
         throw new Error(data.detail || data.error || "Speech synthesis failed. Please retry.");
       }
     } catch (err: any) {
+      if (jobRecord?.id) {
+        solarch.updateGenerationJob(jobRecord.id, {
+          status: "FAILED",
+          error: err.message
+        }).catch(() => {});
+      }
       const errorMsg: ChatMessage = {
         ...newAiMsg,
         status: "ERROR",
@@ -904,10 +1016,25 @@ export default function VoiceChatStudio({
 
     setMessages((prev) => [...prev, pendingMsg]);
 
-    try {
-      const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
-      const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || "default";
+    const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
+    const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || "default";
 
+    let jobRecord: any = null;
+    try {
+      jobRecord = await solarch.createGenerationJob({
+        projectId: project.id,
+        userId: project.userId || "u1",
+        voiceProfileId: selectedProfile?.id || activeProfileId,
+        text: transMsg.translatedText,
+        targetLanguage: transMsg.targetLanguage || "es",
+        styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+        status: "PROCESSING"
+      });
+    } catch (jobErr) {
+      console.warn("Solarch createGenerationJob warning:", jobErr);
+    }
+
+    try {
       const res = await fetch("http://localhost:8000/v1/speech/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -928,20 +1055,51 @@ export default function VoiceChatStudio({
       const data = await res.json();
       if (res.ok && data.status === "COMPLETED" && data.audio_path) {
         const audioUrl = `http://localhost:8000/v1/media/audio/raw?path=${encodeURIComponent(data.audio_path)}`;
+
+        if (jobRecord?.id) {
+          solarch.updateGenerationJob(jobRecord.id, {
+            projectId: project.id,
+            userId: project.userId || "u1",
+            voiceProfileId: selectedProfile?.id || activeProfileId,
+            text: transMsg.translatedText,
+            targetLanguage: transMsg.targetLanguage || "es",
+            styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+            status: "COMPLETED",
+            outputAssetId: data.audio_path,
+            executionTimeMs: data.duration ? Math.round(data.duration * 1000) : 3500
+          }).catch(() => {});
+        }
+
         const completedMsg: ChatMessage = {
           ...pendingMsg,
           status: "COMPLETED",
           audioUrl,
-          duration: data.duration || 3.5
+          duration: data.duration || 3.5,
+          generationJobId: jobRecord?.id,
+          outputAssetId: data.audio_path,
+          voiceProfileId: activeProfileId,
+          speed
         };
         setMessages((prev) =>
           prev.map((msg) => (msg.id === synthMsgId ? completedMsg : msg))
         );
         setActiveMonitorMsg(completedMsg);
       } else {
+        if (jobRecord?.id) {
+          solarch.updateGenerationJob(jobRecord.id, {
+            status: "FAILED",
+            error: data.detail || "Generation failed"
+          }).catch(() => {});
+        }
         throw new Error(data.detail || "Voice synthesis for translation failed.");
       }
     } catch (err: any) {
+      if (jobRecord?.id) {
+        solarch.updateGenerationJob(jobRecord.id, {
+          status: "FAILED",
+          error: err.message
+        }).catch(() => {});
+      }
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === synthMsgId
@@ -1588,58 +1746,75 @@ export default function VoiceChatStudio({
                       </div>
                     )}
 
-                    {msg.status === "COMPLETED" && msg.audioUrl && (
-                      <div className="bg-[#050a1a] border border-cyan-500/30 rounded-xl p-3 flex items-center justify-between gap-3 shadow-inner">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => handlePlayToggle(msg.id, msg.audioUrl!)}
-                            className="w-8 h-8 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center shadow-md transition-all flex-shrink-0"
-                          >
-                            {playingMsgId === msg.id ? (
-                              <IconPause className="w-4 h-4 text-black" />
-                            ) : (
-                              <IconPlay className="w-4 h-4 text-black ml-0.5" />
-                            )}
-                          </button>
-                          <div>
-                            <div className="flex items-center gap-2 text-[11px] text-slate-300 font-bold">
-                              <span>{msg.voiceName}</span>
-                              <span className="text-cyan-400">• {msg.duration?.toFixed(1)}s</span>
+                    {msg.status === "COMPLETED" && (
+                      msg.audioUrl ? (
+                        <div className="bg-[#050a1a] border border-cyan-500/30 rounded-xl p-3 flex items-center justify-between gap-3 shadow-inner">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handlePlayToggle(msg.id, msg.audioUrl!)}
+                              className="w-8 h-8 rounded-full bg-cyan-400 hover:bg-cyan-300 text-black flex items-center justify-center shadow-md transition-all flex-shrink-0"
+                            >
+                              {playingMsgId === msg.id ? (
+                                <IconPause className="w-4 h-4 text-black" />
+                              ) : (
+                                <IconPlay className="w-4 h-4 text-black ml-0.5" />
+                              )}
+                            </button>
+                            <div>
+                              <div className="flex items-center gap-2 text-[11px] text-slate-300 font-bold">
+                                <span>{msg.voiceName}</span>
+                                <span className="text-cyan-400">• {msg.duration?.toFixed(1)}s</span>
+                              </div>
+                              <span className="text-[9px] font-mono text-emerald-400">Audio ready (Controls on Right)</span>
                             </div>
-                            <span className="text-[9px] font-mono text-emerald-400">Audio ready (Controls on Right)</span>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleReplay(msg.id)}
-                            className="p-1.5 bg-[#0e1c3e] hover:bg-[#162955] text-slate-300 rounded-lg text-xs transition-all"
-                            title="Replay"
-                          >
-                            <IconRotateCcw className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleReplay(msg.id)}
+                              className="p-1.5 bg-[#0e1c3e] hover:bg-[#162955] text-slate-300 rounded-lg text-xs transition-all"
+                              title="Replay"
+                            >
+                              <IconRotateCcw className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
 
-                        {/* Authoritative Audio Element */}
-                        <audio
-                          ref={(el) => {
-                            audioRefs.current[msg.id] = el;
-                          }}
-                          crossOrigin="anonymous"
-                          preload="auto"
-                          src={msg.audioUrl}
-                          onEnded={() => {
-                            setPlayingMsgId(null);
-                            onAudioPlaybackState?.(false, null);
-                          }}
-                          onPause={() => {
-                            if (playingMsgId === msg.id) {
+                          {/* Authoritative Audio Element */}
+                          <audio
+                            ref={(el) => {
+                              audioRefs.current[msg.id] = el;
+                            }}
+                            crossOrigin="anonymous"
+                            preload="auto"
+                            src={msg.audioUrl}
+                            onError={() => {
+                              setMessages((prev) =>
+                                prev.map((m) =>
+                                  m.id === msg.id ? { ...m, audioUrl: undefined } : m
+                                )
+                              );
+                            }}
+                            onEnded={() => {
                               setPlayingMsgId(null);
                               onAudioPlaybackState?.(false, null);
-                            }
-                          }}
-                        />
-                      </div>
+                            }}
+                            onPause={() => {
+                              if (playingMsgId === msg.id) {
+                                setPlayingMsgId(null);
+                                onAudioPlaybackState?.(false, null);
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-[#050a18] rounded-xl border border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <IconVolumeX className="w-4 h-4 text-slate-500" />
+                            <span>Audio no longer available</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500">{msg.outputAssetId || msg.generationJobId || ""}</span>
+                        </div>
+                      )
                     )}
                   </div>
                 )}
