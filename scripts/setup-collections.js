@@ -110,7 +110,6 @@ const collectionsToCreate = [
     fields: [
       { name: "projectId", type: "text", required: true },
       { name: "userId", type: "text", required: true },
-      { name: "conversationId", type: "text" },
       { name: "voiceProfileId", type: "text", required: true },
       { name: "text", type: "text", required: true },
       { name: "targetLanguage", type: "text" },
@@ -119,7 +118,6 @@ const collectionsToCreate = [
       { name: "status", type: "text" },
       { name: "progress", type: "number" },
       { name: "outputAssetId", type: "text" },
-      { name: "expiresAt", type: "text" },
       { name: "error", type: "text" },
       { name: "executionTimeMs", type: "number" }
     ]
