@@ -254,6 +254,22 @@ export default function VoiceChatStudio({
     handleVoiceSelected(newProfile);
   };
 
+  const handleProfileDeleted = (profileId: string) => {
+    setProfiles((prev) => prev.filter((p) => p.id !== profileId && p.voiceProfileId !== profileId));
+  };
+
+  const handleProfileRenamed = (profileId: string, newName: string) => {
+    setProfiles((prev) =>
+      prev.map((p) => (p.id === profileId || p.voiceProfileId === profileId ? { ...p, name: newName } : p))
+    );
+    if (selectedProfile && (selectedProfile.id === profileId || selectedProfile.voiceProfileId === profileId)) {
+      setSelectedProfile((prev) => (prev ? { ...prev, name: newName } : null));
+      if (project && typeof window !== "undefined") {
+        localStorage.setItem(`active_voice_name_${project.id}`, newName);
+      }
+    }
+  };
+
   const handleVoiceSelected = (profile: VoiceProfileRecord) => {
     setSelectedProfile(profile);
     if (project && typeof window !== "undefined") {
@@ -2211,16 +2227,19 @@ export default function VoiceChatStudio({
         </aside>
       </div>
 
-      {/* Global Add Voice Modal (for recording & guided extraction) */}
+      {/* Global Add Voice / Voice Library Modal */}
       <VoiceAttachmentModal
         isOpen={attachmentModalOpen}
         initialTab={attachmentInitialTab}
         project={project}
         savedProfiles={profiles}
+        activeProfileId={selectedProfile?.id || selectedProfile?.voiceProfileId}
         onClose={() => setAttachmentModalOpen(false)}
         onVoiceSelected={handleVoiceSelected}
         onScriptExtracted={handleScriptExtracted}
         onProfileCreated={handleProfileCreated}
+        onProfileDeleted={handleProfileDeleted}
+        onProfileRenamed={handleProfileRenamed}
       />
     </div>
   );

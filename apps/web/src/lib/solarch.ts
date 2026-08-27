@@ -205,6 +205,19 @@ export class SolarchService {
     });
   }
 
+  async updateVoiceProfile(id: string, updates: Partial<VoiceProfileRecord>): Promise<any> {
+    return await this.request(`/api/collections/voice_profiles/records/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates)
+    });
+  }
+
+  async deleteVoiceProfile(id: string): Promise<any> {
+    return await this.request(`/api/collections/voice_profiles/records/${id}`, {
+      method: "DELETE"
+    });
+  }
+
   // --- Generation Jobs ---
   async getGenerationJobs(projectId: string): Promise<GenerationJobRecord[]> {
     const data = await this.request(`/api/collections/generation_jobs/records?filter=(projectId='${projectId}')&sort=-created`);
