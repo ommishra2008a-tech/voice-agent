@@ -55,10 +55,23 @@ export interface VoiceProfileRecord {
 
 
 
+export interface ConversationRecord {
+  id?: string;
+  projectId: string;
+  userId: string;
+  title: string;
+  lastMessageAt?: string;
+  archived?: boolean;
+  metadata?: any;
+  created?: string;
+  updated?: string;
+}
+
 export interface GenerationJobRecord {
   id?: string;
   projectId: string;
   userId: string;
+  conversationId?: string;
   voiceProfileId: string;
   text: string;
   targetLanguage?: string;
@@ -66,6 +79,7 @@ export interface GenerationJobRecord {
   emotionParam?: string;
   status: "PENDING" | "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
   outputAssetId?: string;
+  expiresAt?: string;
   error?: string;
   executionTimeMs?: number;
   audioUrl?: string;
@@ -222,10 +236,79 @@ export class SolarchService {
     });
   }
 
+  // --- Conversations (Multi-Chat) ---
+  async getConversations(projectId: string): Promise<ConversationRecord[]> {
+    try {
+      const data = await this.request(`/api/collections/conversations/records?filter=(projectId='${projectId}')&sort=-updated`);
+      return data.items || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async getConversationById(id: string): Promise<ConversationRecord | null> {
+    try {
+      return await this.request(`/api/collections/conversations/records/${id}`);
+    } catch {
+      return null;
+    }
+  }
+
+  async createConversation(conversation: Partial<ConversationRecord>): Promise<ConversationRecord> {
+    return await this.request("/api/collections/conversations/records", {
+      method: "POST",
+      body: JSON.stringify({
+        title: "New Conversation",
+        archived: false,
+        lastMessageAt: new Date().toISOString(),
+        ...conversation
+      })
+    });
+  }
+
+  async updateConversation(id: string, updates: Partial<ConversationRecord>): Promise<ConversationRecord> {
+    return await this.request(`/api/collections/conversations/records/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates)
+    });
+  }
+
+  async deleteConversation(id: string): Promise<any> {
+    return await this.request(`/api/collections/conversations/records/${id}`, {
+      method: "DELETE"
+    });
+  }
+
   // --- Generation Jobs ---
   async getGenerationJobs(projectId: string): Promise<GenerationJobRecord[]> {
     const data = await this.request(`/api/collections/generation_jobs/records?filter=(projectId='${projectId}')&sort=-created`);
     return data.items || [];
+  }
+
+  async getGenerationJobsByConversation(conversationId: string, projectId?: string): Promise<GenerationJobRecord[]> {
+    try {
+      let data: any;
+      try {
+        const filter = encodeURIComponent(`conversationId='${conversationId}'`);
+        data = await this.request(`/api/collections/generation_jobs/records?filter=${filter}&sort=created`);
+        if (data.items && data.items.length > 0) return data.items;
+      } catch {}
+
+      // Resilient fallback: query all project jobs and filter by conversationId or styleParams.conversationId
+      const projFilter = projectId ? `?filter=(projectId='${projectId}')&sort=created` : "?sort=created";
+      data = await this.request(`/api/collections/generation_jobs/records${projFilter}`);
+      const items: GenerationJobRecord[] = data.items || [];
+      return items.filter(j => {
+        if (j.conversationId === conversationId) return true;
+        let styleObj: any = {};
+        try {
+          styleObj = typeof j.styleParams === "string" ? JSON.parse(j.styleParams) : (j.styleParams || {});
+        } catch {}
+        return styleObj?.conversationId === conversationId;
+      });
+    } catch {
+      return [];
+    }
   }
 
   async createGenerationJob(job: Partial<GenerationJobRecord>): Promise<any> {

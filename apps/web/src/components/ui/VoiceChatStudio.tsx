@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { solarch, Project, VoiceProfileRecord } from "../../lib/solarch";
+import { solarch, Project, VoiceProfileRecord, ConversationRecord } from "../../lib/solarch";
 import VoiceAttachmentModal, { AttachmentTab } from "./VoiceAttachmentModal";
 import LabScene from "../3d/LabScene";
 import {
@@ -23,7 +23,12 @@ import {
   IconGlobe,
   IconVolume2,
   IconVolumeX,
-  IconX
+  IconX,
+  IconSearch,
+  IconMessageSquare,
+  IconClock,
+  IconTrash,
+  IconEdit
 } from "./Icons";
 
 export type StudioChatMode = "chat" | "translate" | "dubbing";
@@ -100,6 +105,7 @@ interface ChatMessage {
   outputAssetId?: string;
   voiceProfileId?: string;
   speed?: number;
+  expiresAt?: string;
 }
 
 // Client-side WAV Encoder for Instant Speed-Shifted Rendering
@@ -201,7 +207,15 @@ export default function VoiceChatStudio({
   const [attachmentModalOpen, setAttachmentModalOpen] = useState(false);
   const [attachmentInitialTab, setAttachmentInitialTab] = useState<AttachmentTab>("audio");
 
-  // Chat History Stream
+  // Multi-Chat Conversations State
+  const [conversations, setConversations] = useState<ConversationRecord[]>([]);
+  const [activeConversation, setActiveConversation] = useState<ConversationRecord | null>(null);
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
+  const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
+  const [renamingConvTitle, setRenamingConvTitle] = useState("");
+  const [deletingConvId, setDeletingConvId] = useState<string | null>(null);
+
+  // Chat History Stream for Active Conversation
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "msg_welcome",
@@ -226,25 +240,35 @@ export default function VoiceChatStudio({
     }
   }, [project]);
 
-  const loadChatHistory = async (profilesList?: VoiceProfileRecord[]) => {
-    if (!project) return;
+  const loadConversationMessages = async (conversationId: string, activeProfiles?: VoiceProfileRecord[]) => {
+    if (!project || !conversationId) return;
     try {
-      const activeProfiles = profilesList || profiles;
-      const jobs = await solarch.getGenerationJobs(project.id);
-      if (!jobs || jobs.length === 0) return;
+      const currentProfiles = activeProfiles || profiles;
+      const jobs = await solarch.getGenerationJobsByConversation(conversationId, project.id);
 
-      // Reverse to render in chronological order (oldest to newest)
-      const chronological = [...jobs].reverse();
+      if (!jobs || jobs.length === 0) {
+        setMessages([
+          {
+            id: `msg_welcome_${conversationId}`,
+            sender: "ai",
+            text: "Ready to synthesize speech in this conversation. Type your prompt below and press Generate.",
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            status: "COMPLETED"
+          }
+        ]);
+        setActiveMonitorMsg(null);
+        return;
+      }
+
       const restoredMessages: ChatMessage[] = [];
-
-      for (const job of chronological) {
+      for (const job of jobs) {
         let styleParsed: any = {};
         try {
           styleParsed = typeof job.styleParams === "string" ? JSON.parse(job.styleParams) : (job.styleParams || {});
         } catch (e) {}
 
         const timeStr = job.created ? new Date(job.created).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-        const matchedProfile = activeProfiles.find((p) => p.id === job.voiceProfileId || p.voiceProfileId === job.voiceProfileId || p.name === job.voiceProfileId);
+        const matchedProfile = currentProfiles.find((p) => p.id === job.voiceProfileId || p.voiceProfileId === job.voiceProfileId || p.name === job.voiceProfileId);
         const resolvedVoiceName = matchedProfile?.name || styleParsed?.voiceName || "Saved Voice";
 
         // Reconstruct user prompt
@@ -276,16 +300,166 @@ export default function VoiceChatStudio({
           outputAssetId: job.outputAssetId,
           voiceProfileId: job.voiceProfileId,
           speed: styleParsed?.speed || 1.0,
+          expiresAt: job.expiresAt || styleParsed?.expiresAt,
           error: job.error || (job.status === "FAILED" ? "Voice generation failed" : undefined)
         });
       }
 
-      if (restoredMessages.length > 0) {
-        setMessages(restoredMessages);
+      setMessages(restoredMessages);
+      const lastAi = restoredMessages.filter(m => m.sender === "ai" && m.audioUrl).pop();
+      if (lastAi) {
+        setActiveMonitorMsg(lastAi);
       }
     } catch (err) {
-      console.warn("Failed to load chat history from Solarch:", err);
+      console.warn("Failed to load conversation messages:", err);
     }
+  };
+
+  const loadConversations = async (activeProfiles?: VoiceProfileRecord[]) => {
+    if (!project) return;
+    try {
+      const convs = await solarch.getConversations(project.id);
+      setConversations(convs);
+
+      const savedConvId = typeof window !== "undefined" ? localStorage.getItem(`active_conv_id_${project.id}`) : null;
+      let targetConv: ConversationRecord | null = null;
+
+      if (convs.length > 0) {
+        targetConv = convs.find(c => c.id === savedConvId) || convs[0];
+      } else {
+        const initialConv = await solarch.createConversation({
+          projectId: project.id,
+          userId: project.userId || solarch.getUser()?.id || "u1",
+          title: "New Conversation"
+        });
+        targetConv = initialConv;
+        setConversations([initialConv]);
+      }
+
+      setActiveConversation(targetConv);
+      if (typeof window !== "undefined" && targetConv?.id) {
+        localStorage.setItem(`active_conv_id_${project.id}`, targetConv.id);
+      }
+
+      if (targetConv?.id) {
+        await loadConversationMessages(targetConv.id, activeProfiles);
+      }
+    } catch (e) {
+      console.warn("loadConversations error:", e);
+    }
+  };
+
+  const handleNewChat = async () => {
+    if (!project) return;
+    try {
+      const newConv = await solarch.createConversation({
+        projectId: project.id,
+        userId: project.userId || solarch.getUser()?.id || "u1",
+        title: "New Conversation"
+      });
+      setConversations((prev) => [newConv, ...prev.filter(c => c.id !== newConv.id)]);
+      setActiveConversation(newConv);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`active_conv_id_${project.id}`, newConv.id || "");
+      }
+      setMessages([
+        {
+          id: `msg_welcome_${newConv.id}`,
+          sender: "ai",
+          text: "New conversation created. Select your voice and type your script to generate speech.",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          status: "COMPLETED"
+        }
+      ]);
+      setActiveMonitorMsg(null);
+      setInputText("");
+      setActiveContext(null);
+    } catch (e: any) {
+      alert(`Could not create new chat: ${e.message}`);
+    }
+  };
+
+  const handleSelectConversation = async (conv: ConversationRecord) => {
+    if (activeConversation?.id === conv.id) return;
+    setActiveConversation(conv);
+    if (typeof window !== "undefined" && project?.id && conv.id) {
+      localStorage.setItem(`active_conv_id_${project.id}`, conv.id);
+    }
+    if (conv.id) {
+      await loadConversationMessages(conv.id);
+    }
+  };
+
+  const handleDeleteConversation = async (convId: string) => {
+    try {
+      await solarch.deleteConversation(convId);
+      const remaining = conversations.filter(c => c.id !== convId);
+      setConversations(remaining);
+      setDeletingConvId(null);
+
+      if (activeConversation?.id === convId) {
+        if (remaining.length > 0) {
+          handleSelectConversation(remaining[0]);
+        } else {
+          handleNewChat();
+        }
+      }
+    } catch (e: any) {
+      alert(`Delete conversation failed: ${e.message}`);
+    }
+  };
+
+  const handleRenameConversation = async (conv: ConversationRecord, newTitle: string) => {
+    if (!conv.id || !newTitle.trim()) {
+      setRenamingConvId(null);
+      return;
+    }
+    try {
+      await solarch.updateConversation(conv.id, {
+        projectId: conv.projectId,
+        userId: conv.userId,
+        title: newTitle.trim()
+      });
+      setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, title: newTitle.trim() } : c));
+      if (activeConversation?.id === conv.id) {
+        setActiveConversation(prev => prev ? { ...prev, title: newTitle.trim() } : null);
+      }
+      setRenamingConvId(null);
+    } catch (e: any) {
+      alert(`Rename failed: ${e.message}`);
+    }
+  };
+
+  const filterAndGroupConversations = () => {
+    const query = chatSearchQuery.toLowerCase().trim();
+    const filtered = conversations.filter(c => 
+      !query || c.title.toLowerCase().includes(query)
+    );
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yesterday = today - 86400000;
+
+    const groups: { label: string; items: ConversationRecord[] }[] = [
+      { label: "Today", items: [] },
+      { label: "Yesterday", items: [] },
+      { label: "Older", items: [] }
+    ];
+
+    for (const c of filtered) {
+      const date = c.updated ? new Date(c.updated) : (c.created ? new Date(c.created) : now);
+      const time = date.getTime();
+
+      if (time >= today) {
+        groups[0].items.push(c);
+      } else if (time >= yesterday) {
+        groups[1].items.push(c);
+      } else {
+        groups[2].items.push(c);
+      }
+    }
+
+    return groups.filter(g => g.items.length > 0);
   };
 
   const loadProfiles = async () => {
@@ -304,7 +478,7 @@ export default function VoiceChatStudio({
         );
         setSelectedProfile(match || items[0]);
       }
-      await loadChatHistory(items);
+      await loadConversations(items);
     } catch (e) {}
   };
 
@@ -894,18 +1068,46 @@ export default function VoiceChatStudio({
     setMessages((prev) => [...prev, newAiMsg]);
     setActiveMonitorMsg(newAiMsg);
 
+    // Ensure active conversation exists or create one
+    let curConv = activeConversation;
+    if (!curConv && project) {
+      try {
+        curConv = await solarch.createConversation({
+          projectId: project.id,
+          userId: project.userId || "u1",
+          title: userText.slice(0, 32).trim() || "New Conversation"
+        });
+        setConversations(prev => [curConv!, ...prev]);
+        setActiveConversation(curConv);
+      } catch (cErr) {}
+    } else if (curConv && curConv.title === "New Conversation") {
+      const autoTitle = userText.slice(0, 32).trim() || "Voice Conversation";
+      solarch.updateConversation(curConv.id!, {
+        projectId: curConv.projectId,
+        userId: curConv.userId,
+        title: autoTitle,
+        lastMessageAt: new Date().toISOString()
+      }).then(() => {
+        setConversations(prev => prev.map(c => c.id === curConv!.id ? { ...c, title: autoTitle } : c));
+        setActiveConversation(prev => prev ? { ...prev, title: autoTitle } : null);
+      }).catch(() => {});
+    }
+
     const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
     const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || profileId;
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     let jobRecord: any = null;
     try {
       jobRecord = await solarch.createGenerationJob({
         projectId,
         userId,
+        conversationId: curConv?.id,
         voiceProfileId: selectedProfile?.id || activeProfileId,
         text: userText,
         targetLanguage: language,
         styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+        expiresAt,
         status: "PROCESSING"
       });
     } catch (jobErr) {
@@ -939,12 +1141,14 @@ export default function VoiceChatStudio({
           solarch.updateGenerationJob(jobRecord.id, {
             projectId,
             userId,
+            conversationId: curConv?.id,
             voiceProfileId: selectedProfile?.id || activeProfileId,
             text: userText,
             targetLanguage: language,
             styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
             status: "COMPLETED",
             outputAssetId: data.audio_path,
+            expiresAt,
             executionTimeMs: data.duration ? Math.round(data.duration * 1000) : 3000
           }).catch(() => {});
         }
@@ -958,6 +1162,7 @@ export default function VoiceChatStudio({
           outputAssetId: data.audio_path,
           voiceProfileId: activeProfileId,
           speed,
+          expiresAt,
           evalResult: data.metadata?.evaluation || null
         };
 
@@ -968,6 +1173,12 @@ export default function VoiceChatStudio({
       } else {
         if (jobRecord?.id) {
           solarch.updateGenerationJob(jobRecord.id, {
+            projectId,
+            userId,
+            conversationId: curConv?.id,
+            voiceProfileId: selectedProfile?.id || activeProfileId,
+            text: userText,
+            targetLanguage: language,
             status: "FAILED",
             error: data.detail || data.error || "Generation failed"
           }).catch(() => {});
@@ -977,6 +1188,12 @@ export default function VoiceChatStudio({
     } catch (err: any) {
       if (jobRecord?.id) {
         solarch.updateGenerationJob(jobRecord.id, {
+          projectId,
+          userId,
+          conversationId: curConv?.id,
+          voiceProfileId: selectedProfile?.id || activeProfileId,
+          text: userText,
+          targetLanguage: language,
           status: "FAILED",
           error: err.message
         }).catch(() => {});
@@ -1018,16 +1235,19 @@ export default function VoiceChatStudio({
 
     const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
     const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || "default";
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     let jobRecord: any = null;
     try {
       jobRecord = await solarch.createGenerationJob({
         projectId: project.id,
         userId: project.userId || "u1",
+        conversationId: activeConversation?.id,
         voiceProfileId: selectedProfile?.id || activeProfileId,
         text: transMsg.translatedText,
         targetLanguage: transMsg.targetLanguage || "es",
         styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
+        expiresAt,
         status: "PROCESSING"
       });
     } catch (jobErr) {
@@ -1060,12 +1280,14 @@ export default function VoiceChatStudio({
           solarch.updateGenerationJob(jobRecord.id, {
             projectId: project.id,
             userId: project.userId || "u1",
+            conversationId: activeConversation?.id,
             voiceProfileId: selectedProfile?.id || activeProfileId,
             text: transMsg.translatedText,
             targetLanguage: transMsg.targetLanguage || "es",
             styleParams: JSON.stringify({ model, speed, pitch, emotion, voiceName: activeVoiceName }),
             status: "COMPLETED",
             outputAssetId: data.audio_path,
+            expiresAt,
             executionTimeMs: data.duration ? Math.round(data.duration * 1000) : 3500
           }).catch(() => {});
         }
@@ -1078,7 +1300,8 @@ export default function VoiceChatStudio({
           generationJobId: jobRecord?.id,
           outputAssetId: data.audio_path,
           voiceProfileId: activeProfileId,
-          speed
+          speed,
+          expiresAt
         };
         setMessages((prev) =>
           prev.map((msg) => (msg.id === synthMsgId ? completedMsg : msg))
@@ -1087,6 +1310,12 @@ export default function VoiceChatStudio({
       } else {
         if (jobRecord?.id) {
           solarch.updateGenerationJob(jobRecord.id, {
+            projectId: project.id,
+            userId: project.userId || "u1",
+            conversationId: activeConversation?.id,
+            voiceProfileId: selectedProfile?.id || activeProfileId,
+            text: transMsg.translatedText,
+            targetLanguage: transMsg.targetLanguage || "es",
             status: "FAILED",
             error: data.detail || "Generation failed"
           }).catch(() => {});
@@ -1096,6 +1325,12 @@ export default function VoiceChatStudio({
     } catch (err: any) {
       if (jobRecord?.id) {
         solarch.updateGenerationJob(jobRecord.id, {
+          projectId: project.id,
+          userId: project.userId || "u1",
+          conversationId: activeConversation?.id,
+          voiceProfileId: selectedProfile?.id || activeProfileId,
+          text: transMsg.translatedText,
+          targetLanguage: transMsg.targetLanguage || "es",
           status: "FAILED",
           error: err.message
         }).catch(() => {});
@@ -1287,63 +1522,157 @@ export default function VoiceChatStudio({
       {/* 3-COLUMN SPATIAL LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start">
         
-        {/* ── LEFT COLUMN: CHAT HISTORY RAIL (20-25% width) ── */}
-        <aside className="lg:col-span-3 bg-[#060b1b]/80 border border-[#1e293b]/80 rounded-3xl p-4 backdrop-blur-xl flex flex-col h-[700px] shadow-2xl">
-          <div className="flex items-center justify-between pb-3 border-b border-[#1e293b]/80 mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-300">History</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                {messages.length}
+        {/* ── LEFT COLUMN: RECENT CHATS SIDEBAR (25% width) ── */}
+        <aside className="lg:col-span-3 bg-[#060b1b]/90 border border-[#1e293b]/90 rounded-3xl p-4 backdrop-blur-xl flex flex-col h-[700px] shadow-2xl">
+          
+          {/* Header & New Chat Button */}
+          <div className="space-y-3 pb-3 border-b border-[#1e293b] flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <IconMessageSquare className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-200">Recent Chats</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                {conversations.length}
               </span>
             </div>
+
             <button
-              onClick={() => {
-                setActiveContext(null);
-                setMessages([
-                  {
-                    id: `msg_welcome_${Date.now()}`,
-                    sender: "ai",
-                    text: "New session started. Ready to synthesize with active voice.",
-                    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                    status: "COMPLETED"
-                  }
-                ]);
-              }}
-              className="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 transition-all flex items-center gap-1 bg-[#0b142c] px-2.5 py-1 rounded-xl border border-cyan-500/30"
+              onClick={handleNewChat}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-600 hover:opacity-95 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
-              <IconPlus className="w-3 h-3" />
-              <span>New</span>
+              <IconPlus className="w-4 h-4 text-black" />
+              <span>+ New Chat</span>
             </button>
+
+            {/* Search Box */}
+            <div className="relative">
+              <IconSearch className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={chatSearchQuery}
+                onChange={(e) => setChatSearchQuery(e.target.value)}
+                placeholder="Search chats..."
+                className="w-full bg-[#0b142c] border border-[#1e293b] focus:border-cyan-400 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all"
+              />
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                onClick={() => setActiveMonitorMsg(m)}
-                className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
-                  activeMonitorMsg?.id === m.id
-                    ? "bg-[#0b1633] border-cyan-500/60 shadow-lg shadow-cyan-500/10"
-                    : "bg-[#050a18]/70 border-[#1e293b]/60 hover:border-cyan-500/30 hover:bg-[#070e22]"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono text-cyan-400 font-bold">
-                    {m.sender === "user" ? "You" : m.type === "translation" ? "Translation" : m.type === "dubbing" ? "Dubbing" : m.voiceName || "AI Voice"}
-                  </span>
-                  <span className="text-[9px] font-mono text-slate-500">{m.timestamp}</span>
-                </div>
-                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-                  {m.text}
-                </p>
-                {m.status === "COMPLETED" && m.audioUrl && (
-                  <div className="mt-2 flex items-center gap-2 text-[10px] text-emerald-400 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{m.duration?.toFixed(1)}s audio ready</span>
-                  </div>
-                )}
+          {/* Grouped Conversations Feed */}
+          <div className="flex-1 overflow-y-auto space-y-4 pt-3 pr-1">
+            {filterAndGroupConversations().length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-500">
+                No chats found
               </div>
-            ))}
+            ) : (
+              filterAndGroupConversations().map((group) => (
+                <div key={group.label} className="space-y-1.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold px-2 block">
+                    {group.label}
+                  </span>
+                  <div className="space-y-1">
+                    {group.items.map((conv) => {
+                      const isActive = activeConversation?.id === conv.id;
+                      const isRenaming = renamingConvId === conv.id;
+                      const isDeleting = deletingConvId === conv.id;
+
+                      return (
+                        <div
+                          key={conv.id}
+                          onClick={() => !isRenaming && !isDeleting && handleSelectConversation(conv)}
+                          className={`p-2.5 rounded-2xl border text-left cursor-pointer transition-all relative group flex flex-col gap-1 ${
+                            isActive
+                              ? "bg-[#0c1a3a] border-cyan-400 shadow-md shadow-cyan-500/10 text-white"
+                              : "bg-[#050a18]/70 border-[#1e293b]/60 hover:border-cyan-500/30 hover:bg-[#070e22] text-slate-300"
+                          }`}
+                        >
+                          {isRenaming ? (
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                value={renamingConvTitle}
+                                onChange={(e) => setRenamingConvTitle(e.target.value)}
+                                className="bg-[#030612] border border-cyan-400 rounded-lg px-2 py-0.5 text-xs text-white flex-1 focus:outline-none"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleRenameConversation(conv, renamingConvTitle)}
+                                className="px-2 py-0.5 bg-cyan-400 text-black text-[10px] font-bold rounded-md"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setRenamingConvId(null)}
+                                className="px-2 py-0.5 bg-slate-800 text-slate-300 text-[10px] rounded-md"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <IconMessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-400"}`} />
+                                <span className="text-xs font-semibold truncate block">
+                                  {conv.title || "Untitled Chat"}
+                                </span>
+                              </div>
+
+                              {/* Action Buttons on Hover */}
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setRenamingConvId(conv.id || null);
+                                    setRenamingConvTitle(conv.title);
+                                    setDeletingConvId(null);
+                                  }}
+                                  className="p-1 hover:bg-[#142654] text-slate-400 hover:text-cyan-300 rounded"
+                                  title="Rename chat"
+                                >
+                                  <IconEdit className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeletingConvId(conv.id || null);
+                                    setRenamingConvId(null);
+                                  }}
+                                  className="p-1 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 rounded"
+                                  title="Delete chat"
+                                >
+                                  <IconTrash className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Delete Confirmation Dialog */}
+                          {isDeleting && (
+                            <div className="mt-1 p-2 bg-rose-950/60 border border-rose-500/40 rounded-xl text-[10px] text-rose-200 flex items-center justify-between gap-2 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                              <span>Delete chat?</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleDeleteConversation(conv.id!)}
+                                  className="px-2 py-0.5 bg-rose-600 text-white font-bold rounded"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => setDeletingConvId(null)}
+                                  className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </aside>
 
@@ -1437,7 +1766,7 @@ export default function VoiceChatStudio({
             </div>
           )}
 
-          {/* Active Voice Pill Bar */}
+          {/* Active Conversation & Voice Pill Bar */}
           <div className="bg-[#0b142c]/85 border border-cyan-500/30 rounded-2xl p-3 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20">
@@ -1445,11 +1774,11 @@ export default function VoiceChatStudio({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 font-medium">Active Voice:</span>
-                  <span className="text-sm font-bold text-white">{activeVoiceName}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    Excellent
-                  </span>
+                  <span className="text-xs text-slate-400 font-medium">Chat:</span>
+                  <span className="text-sm font-bold text-white">{activeConversation?.title || "New Conversation"}</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-xs text-slate-400 font-medium">Voice:</span>
+                  <span className="text-sm font-bold text-cyan-300">{activeVoiceName}</span>
                 </div>
                 <p className="text-[10px] text-cyan-400 font-mono">Zero-Shot Neural Cloning ({model.toUpperCase()})</p>
               </div>
@@ -1747,7 +2076,15 @@ export default function VoiceChatStudio({
                     )}
 
                     {msg.status === "COMPLETED" && (
-                      msg.audioUrl ? (
+                      msg.expiresAt && new Date(msg.expiresAt).getTime() < Date.now() ? (
+                        <div className="p-3 bg-[#050a18] rounded-xl border border-amber-500/30 text-xs text-amber-300 flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <IconClock className="w-4 h-4 text-amber-400" />
+                            <span>Audio expired (30-day retention passed)</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500">{msg.generationJobId || msg.outputAssetId || ""}</span>
+                        </div>
+                      ) : msg.audioUrl ? (
                         <div className="bg-[#050a1a] border border-cyan-500/30 rounded-xl p-3 flex items-center justify-between gap-3 shadow-inner">
                           <div className="flex items-center gap-3">
                             <button

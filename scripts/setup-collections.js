@@ -83,6 +83,23 @@ const collectionsToCreate = [
     ]
   },
   {
+    name: "conversations",
+    type: "base",
+    listRule: "",
+    viewRule: "",
+    createRule: "",
+    updateRule: "",
+    deleteRule: "",
+    fields: [
+      { name: "projectId", type: "text", required: true },
+      { name: "userId", type: "text", required: true },
+      { name: "title", type: "text", required: true },
+      { name: "lastMessageAt", type: "text" },
+      { name: "archived", type: "bool" },
+      { name: "metadata", type: "json" }
+    ]
+  },
+  {
     name: "generation_jobs",
     type: "base",
     listRule: "",
@@ -93,6 +110,7 @@ const collectionsToCreate = [
     fields: [
       { name: "projectId", type: "text", required: true },
       { name: "userId", type: "text", required: true },
+      { name: "conversationId", type: "text" },
       { name: "voiceProfileId", type: "text", required: true },
       { name: "text", type: "text", required: true },
       { name: "targetLanguage", type: "text" },
@@ -101,6 +119,7 @@ const collectionsToCreate = [
       { name: "status", type: "text" },
       { name: "progress", type: "number" },
       { name: "outputAssetId", type: "text" },
+      { name: "expiresAt", type: "text" },
       { name: "error", type: "text" },
       { name: "executionTimeMs", type: "number" }
     ]
