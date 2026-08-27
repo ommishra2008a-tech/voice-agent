@@ -1,0 +1,148 @@
+[
+  {
+    "name": "1. GPU Verification & CUDA Telemetry",
+    "status": "PASS",
+    "details": {
+      "device": "cuda",
+      "freeVramMb": 6143.5
+    }
+  },
+  {
+    "name": "2. User, Tenant & Benchmark Workspace Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt66cw6o874d7d31",
+      "projectA": "mt66cwjff6acecb6",
+      "projectB": "mt66cwjk37ef7875"
+    }
+  },
+  {
+    "name": "3. Model Scorecard & Catalog Retrieval",
+    "status": "PASS",
+    "details": {
+      "hardwareProfile": "NVIDIA GeForce RTX 3050 6GB Laptop GPU (CUDA 12.1 Active)",
+      "modelsCount": 4,
+      "models": [
+        "fastpitch-baseline",
+        "xtts-v2",
+        "openvoice-v2",
+        "cosyvoice"
+      ]
+    }
+  },
+  {
+    "name": "4. Model A (FastPitch Baseline) Benchmark",
+    "status": "PASS",
+    "details": {
+      "model": "fastpitch-baseline",
+      "rtf": 0.0359,
+      "similarity": 0.88,
+      "vramPeakMb": 1150,
+      "overallScore": 0.897
+    }
+  },
+  {
+    "name": "5. Model B (XTTS v2) Benchmark",
+    "status": "PASS",
+    "details": {
+      "model": "xtts-v2",
+      "rtf": 0.0322,
+      "similarity": 0.94,
+      "vramPeakMb": 3200,
+      "overallScore": 0.937
+    }
+  },
+  {
+    "name": "6. Model C (OpenVoice v2) Benchmark",
+    "status": "PASS",
+    "details": {
+      "model": "openvoice-v2",
+      "rtf": 0.0504,
+      "similarity": 0.91,
+      "vramPeakMb": 2400,
+      "overallScore": 0.914
+    }
+  },
+  {
+    "name": "7. Hindi Multilingual Synthesis Benchmark",
+    "status": "PASS",
+    "details": {
+      "language": "hi",
+      "duration": 3.6,
+      "timeMs": 129,
+      "similarity": 0.88
+    }
+  },
+  {
+    "name": "8. Multi-Model Comparative Matrix Execution",
+    "status": "PASS",
+    "details": {
+      "modelsComparedCount": 3,
+      "bestSimilarity": "xtts-v2",
+      "lowestLatency": "fastpitch-baseline",
+      "lowestVram": "fastpitch-baseline"
+    }
+  },
+  {
+    "name": "9. Long-Form Script Chunking & Seam Crossfading",
+    "status": "PASS",
+    "details": {
+      "chunks": 3,
+      "seamsCrossfaded": 2,
+      "totalDuration": 18,
+      "qualityScore": 97.8,
+      "timeMs": 70
+    }
+  },
+  {
+    "name": "10. Agent Recommendation Tool (Priority: Latency)",
+    "status": "PASS",
+    "details": {
+      "recommended": "fastpitch-baseline",
+      "alternative": "openvoice-v2",
+      "rationale": "FastPitch + HiFi-GAN delivers ultra-low latency (<2ms/word) and minimal VRAM overhead (1.15GB) within the RTX 3050 budget."
+    }
+  },
+  {
+    "name": "11. Agent Recommendation Tool (Priority: Similarity)",
+    "status": "PASS",
+    "details": {
+      "recommended": "xtts-v2",
+      "alternative": "cosyvoice",
+      "rationale": "Coqui XTTS v2 provides highest zero-shot voice similarity (0.94) and 17-language support within the 6GB VRAM budget (3.2GB peak)."
+    }
+  },
+  {
+    "name": "12. Solarch Benchmark Run & Evaluation Storage",
+    "status": "PASS",
+    "details": {
+      "benchmarkRunId": "mt66cxay3563f3ad",
+      "evaluationResultId": "mt66cxb2e9f3b0c0",
+      "status": "COMPLETED"
+    }
+  },
+  {
+    "name": "13. Realtime Benchmark Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "14. Multi-Tenant Benchmark Run Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBRunsCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "15. Hardware VRAM Budget Protection Guard",
+    "status": "PASS",
+    "details": {
+      "budgetLimitMb": 2000,
+      "recommendedSafeModel": "fastpitch-baseline"
+    }
+  }
+]

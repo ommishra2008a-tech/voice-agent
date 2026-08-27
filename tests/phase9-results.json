@@ -1,0 +1,179 @@
+[
+  {
+    "name": "1. Agent Service Health & Subsystem State",
+    "status": "PASS",
+    "details": {
+      "status": "HEALTHY",
+      "agent_mode": "autonomous-orchestrator",
+      "registered_tools_count": 7,
+      "memory_tiers": [
+        "short_term_session",
+        "semantic_rag_384d",
+        "structured_solarch_baas"
+      ]
+    }
+  },
+  {
+    "name": "2. User, Tenant & Agent Workspace Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt664zeb17c6293c",
+      "projectA": "mt664zqt1ec6b22f",
+      "projectB": "mt664zr0e2b93adc"
+    }
+  },
+  {
+    "name": "3. Solarch Agent Session Storage",
+    "status": "PASS",
+    "details": {
+      "sessionId": "mt664zr64eadc00d",
+      "status": "ACTIVE"
+    }
+  },
+  {
+    "name": "4. Agent Tool Registry Catalog",
+    "status": "PASS",
+    "details": {
+      "toolsCount": 7,
+      "categories": [
+        "SOURCE",
+        "AUDIO",
+        "RAG",
+        "LANGUAGE",
+        "GENERATION"
+      ]
+    }
+  },
+  {
+    "name": "5. Workflow A: Direct Speech Generation",
+    "status": "PASS",
+    "details": {
+      "planGoal": "Generate speech from input prompt: 'Synthesize speech for: Autonom...'",
+      "toolsCalled": [
+        "generate_speech"
+      ],
+      "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\generated_audio\\gen_1787511405583.wav",
+      "timeMs": 64
+    }
+  },
+  {
+    "name": "6. Workflow B: URL Diarization & Speaker Discovery",
+    "status": "PASS",
+    "details": {
+      "planGoal": "Ingest media source, extract None, translate to EN, and synthesize audio",
+      "toolsCalled": [
+        "process_media_url",
+        "select_speaker",
+        "translate_text",
+        "generate_speech"
+      ],
+      "result": "Speech synthesis completed successfully in selected voice. Audio generated at D:\\testing\\projects\\AGENT\\voice-agent\\storage\\generated_audio\\gen_1787511405656.wav",
+      "timeMs": 64
+    }
+  },
+  {
+    "name": "7. Workflow C: Grounded RAG Knowledge QA",
+    "status": "PASS",
+    "details": {
+      "planGoal": "Answer user question grounded in knowledge base: 'What did Speaker 2 say about acoustic normalization and vector search?'",
+      "citations": [
+        "Transcript (speaker_2 [6.5s-14.2s])"
+      ],
+      "answerSnippet": "Based on verified knowledge snippets (Transcript (speaker_2 [6.5s-14.2s])):...",
+      "timeMs": 1
+    }
+  },
+  {
+    "name": "8. Workflow D: Full Multi-Step Chaining (URL → Speaker → Translate → Synthesize)",
+    "status": "PASS",
+    "details": {
+      "stagesCount": 4,
+      "toolsChained": [
+        "process_media_url",
+        "select_speaker",
+        "translate_text",
+        "generate_speech"
+      ],
+      "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\generated_audio\\gen_1787511405731.wav",
+      "timeMs": 64
+    }
+  },
+  {
+    "name": "9. Solarch Agent Run & Tool Call Storage",
+    "status": "PASS",
+    "details": {
+      "runId": "mt664zxd344dce73",
+      "toolCallId": "mt664zxi71032c7d",
+      "status": "COMPLETED"
+    }
+  },
+  {
+    "name": "10. Multi-Turn Conversational Memory & Context Resolution",
+    "status": "PASS",
+    "details": {
+      "sessionId": "session_agent_1787511404560",
+      "planGoal": "Translate text to HI",
+      "toolsCalled": [
+        "translate_text"
+      ],
+      "result": "Translation complete: Translate it में Hindi."
+    }
+  },
+  {
+    "name": "11. Realtime Agent Events Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "12. Multi-Tenant Agent Run Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBRunsCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "13. Empty Agent Request Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": 400,
+      "detail": "Cannot run agent with empty request"
+    }
+  },
+  {
+    "name": "14. Benchmark Workflow A (Direct Speech)",
+    "status": "PASS",
+    "details": {
+      "agentMs": 60,
+      "totalRoundtripMs": 67
+    }
+  },
+  {
+    "name": "15. Benchmark Workflow B (URL → Transcript)",
+    "status": "PASS",
+    "details": {
+      "agentMs": 61,
+      "totalRoundtripMs": 68
+    }
+  },
+  {
+    "name": "16. Benchmark Workflow C (Sourced RAG Query)",
+    "status": "PASS",
+    "details": {
+      "agentMs": 1,
+      "totalRoundtripMs": 4
+    }
+  },
+  {
+    "name": "17. Benchmark Workflow D (End-to-End Orchestration)",
+    "status": "PASS",
+    "details": {
+      "stagesCount": 4,
+      "agentMs": 72,
+      "totalRoundtripMs": 77
+    }
+  }
+]

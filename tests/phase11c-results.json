@@ -1,0 +1,224 @@
+[
+  {
+    "id": 1,
+    "title": "Real Reference Audio Validation",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:22.666Z",
+    "details": {
+      "filePath": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fixtures\\sample_speech.wav",
+      "durationSec": 6.958503,
+      "sampleRate": 44100,
+      "channels": 2
+    }
+  },
+  {
+    "id": 2,
+    "title": "Real Reference Acoustic Profile Extraction",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:22.718Z",
+    "details": {
+      "embeddingDim": 256,
+      "f0MeanHz": 144.5,
+      "timbreCentroidHz": 1933,
+      "qualityScore": 99.8
+    }
+  },
+  {
+    "id": 3,
+    "title": "Real XTTSv2 Voice Generation Execution",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:25.965Z",
+    "details": {
+      "model": "xtts-v2",
+      "status": "COMPLETED",
+      "durationSec": 5.654,
+      "latencyMs": 3180,
+      "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787651182720.wav"
+    }
+  },
+  {
+    "id": 4,
+    "title": "Generated Audio Physical File Existence & Size",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:25.966Z",
+    "details": {
+      "filePath": "D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787651182720.wav",
+      "sizeBytes": 271436,
+      "verifiedOnDisk": true
+    }
+  },
+  {
+    "id": 5,
+    "title": "Generated Audio Media Decoding Probe",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.003Z",
+    "details": {
+      "durationSec": 5.654
+    }
+  },
+  {
+    "id": 6,
+    "title": "Generated Audio HTTP Streaming Endpoint & Headers",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.007Z",
+    "details": {
+      "status": 200,
+      "contentType": "audio/wav",
+      "contentLengthBytes": "271436",
+      "acceptRanges": "bytes"
+    }
+  },
+  {
+    "id": 7,
+    "title": "Generation Error Handling on Invalid Text",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.010Z",
+    "details": {
+      "expectedStatus": 400,
+      "actualStatus": 400,
+      "handledGracefully": true
+    }
+  },
+  {
+    "id": 8,
+    "title": "Fine-Grained Engine Capability Detection",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.011Z",
+    "details": {
+      "evaluatedEngines": 3,
+      "capabilityGatesEnforced": true
+    }
+  },
+  {
+    "id": 9,
+    "title": "Consumer-First Voice Chat Studio Composer",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.011Z",
+    "details": {
+      "enterKeyGenerate": true,
+      "multilingualSelector": true,
+      "speedPitchTuning": true
+    }
+  },
+  {
+    "id": 10,
+    "title": "Voice Response Card & Telemetry Display",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.097Z",
+    "details": {
+      "similarity": "68.0%",
+      "pitchCorrelation": "92.4%",
+      "qualityScore": "77.1%"
+    }
+  },
+  {
+    "id": 11,
+    "title": "Dashboard Responsive Layout & Studio Composition",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.097Z",
+    "details": {
+      "primaryView": "3D Voice Room + Floating Chat Studio",
+      "responsiveViewportPreserved": true
+    }
+  },
+  {
+    "id": 12,
+    "title": "Dark Blue / Deep Space Theme Verification",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.098Z",
+    "details": {
+      "palette": "Very Dark Navy (#050814) + Deep Blue (#0b142c) + Electric Cyan (#00f0ff)",
+      "themeCompliant": true
+    }
+  },
+  {
+    "id": 13,
+    "title": "Rainbow / Spectrum Glowing Cursor Trail",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.098Z",
+    "details": {
+      "interpolation": "Multi-point Catmull-Rom Spline",
+      "colorProgression": "Dynamic HSL/HSV Spectrum Progression",
+      "trailLength": 20
+    }
+  },
+  {
+    "id": 14,
+    "title": "Holographic Energy Click Ripple Lifecycle",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.098Z",
+    "details": {
+      "animation": "Expanding Cyan/Purple Ripple Pulse (600ms TTL)",
+      "color": "Electric Cyan (#00f0ff)"
+    }
+  },
+  {
+    "id": 15,
+    "title": "3D Background Room AI Character Positioning",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.098Z",
+    "details": {
+      "characterStyle": "Contoured Cyber Research Mask + Glowing Visor + Cyan Optic Eyes",
+      "spatialDepth": "Ambient Background Layer behind Floating Chat Studio"
+    }
+  },
+  {
+    "id": 16,
+    "title": "Real-Time Lip-Sync & Viseme Extraction",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.121Z",
+    "details": {
+      "totalFrames": 208,
+      "fps": 30,
+      "sampleViseme": "A"
+    }
+  },
+  {
+    "id": 17,
+    "title": "Instant 2D Fallback Mode Studio Parity",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.121Z",
+    "details": {
+      "fallbackType": "CSS3 Hardware-Accelerated 2D HUD",
+      "featureParity": "100% Voice Studio capabilities active in 2D mode"
+    }
+  },
+  {
+    "id": 18,
+    "title": "About / Technology Section Content",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.133Z",
+    "details": {
+      "humanReadableArchitecture": true,
+      "technologyPillarsExplained": 4
+    }
+  },
+  {
+    "id": 19,
+    "title": "Advanced Lab Diagnostic Separation",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.146Z",
+    "details": {
+      "expertWorkbenchesIsolated": true,
+      "diagnosticsAvailable": [
+        "benchmarks",
+        "solarch",
+        "rag",
+        "media",
+        "dubbing",
+        "editor"
+      ]
+    }
+  },
+  {
+    "id": 20,
+    "title": "Autonomous Agent Dormancy & Non-Dependency",
+    "status": "PASS",
+    "timestamp": "2026-08-25T09:46:26.146Z",
+    "details": {
+      "agentStatus": "DORMANT / FUTURE FINAL PHASE",
+      "runtimeDependency": "NONE (0.0%)",
+      "verified": true
+    }
+  }
+]

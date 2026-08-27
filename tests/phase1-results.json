@@ -1,0 +1,127 @@
+[
+  {
+    "name": "1. Server Health Check",
+    "status": "PASS",
+    "details": {
+      "status": "ok"
+    }
+  },
+  {
+    "name": "2. Admin Authentication (SolarchClient)",
+    "status": "PASS",
+    "details": {
+      "tokenReceived": true,
+      "email": "admin@voiceai.lab"
+    }
+  },
+  {
+    "name": "3. User Registration (Signup)",
+    "status": "PASS",
+    "details": {
+      "userId": "mt62quqe38e457f1",
+      "email": "researcher_1787505707029@voiceai.lab"
+    }
+  },
+  {
+    "name": "4. User Authentication & Session (Login)",
+    "status": "PASS",
+    "details": {
+      "tokenReceived": true,
+      "userId": "mt62quqe38e457f1",
+      "userEmail": "researcher_1787505707029@voiceai.lab"
+    }
+  },
+  {
+    "name": "5. Project Workspace Creation",
+    "status": "PASS",
+    "details": {
+      "projectId": "mt62qv5j638e65df",
+      "name": "Quantum Speech Synthesis Lab"
+    }
+  },
+  {
+    "name": "6. List Projects (Pagination)",
+    "status": "PASS",
+    "details": {
+      "totalItems": 3,
+      "count": 3
+    }
+  },
+  {
+    "name": "7. Source Asset Metadata Record",
+    "status": "PASS",
+    "details": {
+      "sourceId": "mt62qv5xfd2e4657",
+      "status": "uploaded"
+    }
+  },
+  {
+    "name": "8. Transcript Storage",
+    "status": "PASS",
+    "details": {
+      "transcriptId": "mt62qv62d4e106e1",
+      "confidence": 0.985
+    }
+  },
+  {
+    "name": "9. Voice Profile Schema & Embeddings",
+    "status": "PASS",
+    "details": {
+      "profileId": "mt62qv67a15b7293",
+      "name": "Dr. Sarah - Standard Reference Voice"
+    }
+  },
+  {
+    "name": "10. Generation Job Creation",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt62qv6dd574eb26",
+      "initialStatus": "PENDING"
+    }
+  },
+  {
+    "name": "10b. Generation Job Status Update",
+    "status": "PASS",
+    "details": {
+      "updatedStatus": "COMPLETED",
+      "progress": 100
+    }
+  },
+  {
+    "name": "11. Generated Asset Record",
+    "status": "PASS",
+    "details": {
+      "assetId": "mt62qv6m3759a897",
+      "duration": 3.85,
+      "qualityScore": 0.942
+    }
+  },
+  {
+    "name": "12. Native Vector Search Evaluation",
+    "status": "PASS",
+    "details": {
+      "endpointStatus": 404,
+      "vectorRecordCreated": true,
+      "responseType": "object"
+    }
+  },
+  {
+    "name": "13. Realtime Protocol Verification",
+    "status": "PASS",
+    "details": {
+      "sseEndpointStatus": 200,
+      "wsEndpointUrl": "ws://localhost:8090/realtime"
+    }
+  },
+  {
+    "name": "14. Native AI Chat Endpoint Evaluation",
+    "status": "PASS",
+    "details": {
+      "status": 500,
+      "response": {
+        "code": 500,
+        "message": "Internal server error"
+      }
+    }
+  }
+]

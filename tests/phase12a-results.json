@@ -1,0 +1,129 @@
+{
+  "suite": "Phase 12A — Advanced Reference Voice Analyzer",
+  "timestamp": "2026-08-27T08:48:33.955Z",
+  "total": 20,
+  "passed": 20,
+  "failed": 0,
+  "tests": [
+    {
+      "testId": "TEST-12A-01",
+      "name": "Voice Models Endpoint & Architecture Metadata",
+      "status": "PASSED",
+      "detail": "Encoder: spectral-fingerprint, Type: deterministic-acoustic-fingerprint, Dim: 256"
+    },
+    {
+      "testId": "TEST-12A-02",
+      "name": "Reference Audio Upload & Ingestion",
+      "status": "PASSED",
+      "detail": "Uploaded to: D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\voices\\ref_baa0149d-f74.wav, Size: 306916 bytes, Duration: 6.958503s"
+    },
+    {
+      "testId": "TEST-12A-03",
+      "name": "Empty Audio Upload Rejection",
+      "status": "PASSED",
+      "detail": "Correctly rejected 0-byte file (Status 400)"
+    },
+    {
+      "testId": "TEST-12A-04",
+      "name": "Unsupported File Format Rejection",
+      "status": "PASSED",
+      "detail": "Rejected .txt file as expected (Status 400)"
+    },
+    {
+      "testId": "TEST-12A-05",
+      "name": "Full Multi-Dimensional Voice Analysis Pipeline",
+      "status": "PASSED",
+      "detail": "Status: COMPLETED, Exec time: 61ms"
+    },
+    {
+      "testId": "TEST-12A-06",
+      "name": "Pitch Analyzer — Real F0 Extraction & Contour",
+      "status": "PASSED",
+      "detail": "F0 Mean: 181.1 Hz, Range: 414.23 Hz, Samples: 20"
+    },
+    {
+      "testId": "TEST-12A-07",
+      "name": "Timbre Analyzer — Real FFT Centroid & 13 MFCCs",
+      "status": "PASSED",
+      "detail": "Centroid: 2021.39 Hz, Bandwidth: 2187.4 Hz, MFCCs: 13"
+    },
+    {
+      "testId": "TEST-12A-08",
+      "name": "Prosody Analyzer — Speaking Rate, Pauses & Rhythm",
+      "status": "PASSED",
+      "detail": "Rate: 300 WPM, Rhythm Score: 0, Energy Var: 0.5313"
+    },
+    {
+      "testId": "TEST-12A-09",
+      "name": "Style Analyzer — Conversational, Formality & Expressiveness",
+      "status": "PASSED",
+      "detail": "Conv: 1, Form: 0.21, Expr: 1, Rhythm: expressive_varied"
+    },
+    {
+      "testId": "TEST-12A-10",
+      "name": "Emotion Analyzer — Acoustic Emotion Distribution",
+      "status": "PASSED",
+      "detail": "Primary: energetic (Conf: 0.262), Distribution keys: neutral, calm, confident, energetic, warm, hesitant"
+    },
+    {
+      "testId": "TEST-12A-11",
+      "name": "Voice Quality Analyzer — SNR, Speech Duration & Quality Gate",
+      "status": "PASSED",
+      "detail": "Quality Score: 77.7/100, SNR: 60 dB, Gate Passed: true"
+    },
+    {
+      "testId": "TEST-12A-12",
+      "name": "Speaker Identity Encoder — 256-D L2 Normalized Embedding",
+      "status": "PASSED",
+      "detail": "Model: spectral-fingerprint, Dimension: 256, L2 Norm: 1.0000"
+    },
+    {
+      "testId": "TEST-12A-13",
+      "name": "Analysis Response Traceability & Versioning Linkage",
+      "status": "PASSED",
+      "detail": "Profile Ver: 1.0.0, Encoder Ver: spectral-fingerprint-v1.0.0, Ref: D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fixtures\\real_speech_reference.wav"
+    },
+    {
+      "testId": "TEST-12A-14",
+      "name": "Non-Existent Audio Analysis Handling",
+      "status": "PASSED",
+      "detail": "Correctly returned 400 Bad Request"
+    },
+    {
+      "testId": "TEST-12A-15",
+      "name": "Voice Profile Creation Pipeline",
+      "status": "PASSED",
+      "detail": "Profile ID: vp_2130e645889f4af6, Status: READY, Quality: 77.7/100"
+    },
+    {
+      "testId": "TEST-12A-16",
+      "name": "Profile Creation Audio Path Validation",
+      "status": "PASSED",
+      "detail": "Rejected empty audio_paths (Status 400)"
+    },
+    {
+      "testId": "TEST-12A-17",
+      "name": "Voice Profile Contract Versioning & Reference Audios",
+      "status": "PASSED",
+      "detail": "Version: 1.0.0, CreatedAt: 2026-08-27T08:48:33.693888+00:00, References: 1"
+    },
+    {
+      "testId": "TEST-12A-18",
+      "name": "Voice Comparator — Exact Identity Verification",
+      "status": "PASSED",
+      "detail": "Cosine Sim: 1, Same Speaker: true, Confidence: 1"
+    },
+    {
+      "testId": "TEST-12A-19",
+      "name": "Voice Comparator Missing Audio Handling",
+      "status": "PASSED",
+      "detail": "Correctly reported FAILED status and non-match"
+    },
+    {
+      "testId": "TEST-12A-20",
+      "name": "Dedicated Voice Quality Assessment Endpoint",
+      "status": "PASSED",
+      "detail": "Status: COMPLETED, Quality Score: 77.7, SNR: 60 dB"
+    }
+  ]
+}

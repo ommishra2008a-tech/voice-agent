@@ -1,0 +1,173 @@
+[
+  {
+    "name": "1. GPU Environment & Engine Telemetry",
+    "status": "PASS",
+    "details": {
+      "device": "cpu",
+      "vram": {
+        "cuda_available": false,
+        "device_name": "CPU",
+        "allocated_mb": 0,
+        "reserved_mb": 0,
+        "total_mb": 0,
+        "free_mb": 0
+      },
+      "engineCount": 4
+    }
+  },
+  {
+    "name": "2. Model Availability & Engine Registry",
+    "status": "PASS",
+    "details": {
+      "models": [
+        "fastpitch-baseline",
+        "xtts-v2",
+        "openvoice-v2",
+        "cosyvoice"
+      ]
+    }
+  },
+  {
+    "name": "3. User, Workspace & Voice Profile Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt64wcq7c6b2f970",
+      "projectA": "mt64wd3v4903fe7e",
+      "voiceProfileId": "mt64wd4g32346e2a"
+    }
+  },
+  {
+    "name": "4. Voice Profile Retrieval by Engine",
+    "status": "PASS",
+    "details": {
+      "id": "mt64wd4g32346e2a",
+      "name": "Dr. Elena Synthesis Target",
+      "speakerId": "speaker_1"
+    }
+  },
+  {
+    "name": "5. Python Voice Engine Direct Synthesis",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "outputPath": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\generated_audio\\gen_1787509323388.wav",
+      "duration": 4.4,
+      "sampleRate": 24000,
+      "timeMs": 55
+    }
+  },
+  {
+    "name": "6. Solarch Generation Job Creation (PENDING)",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt64wd7r09700220",
+      "status": "PENDING"
+    }
+  },
+  {
+    "name": "7a. Generation Job Transition (QUEUED 25%)",
+    "status": "PASS",
+    "details": {
+      "status": "QUEUED",
+      "progress": 25
+    }
+  },
+  {
+    "name": "7b. Generation Job Transition (PROCESSING 75%)",
+    "status": "PASS",
+    "details": {
+      "status": "PROCESSING",
+      "progress": 75
+    }
+  },
+  {
+    "name": "7c. Generation Job Transition (COMPLETED 100%)",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "progress": 100
+    }
+  },
+  {
+    "name": "8. Solarch Generated Asset Storage",
+    "status": "PASS",
+    "details": {
+      "generatedAssetId": "mt64wd8t219dd4f2",
+      "duration": 4.4,
+      "format": "wav"
+    }
+  },
+  {
+    "name": "9. Post-Synthesis Quality & Identity Evaluation",
+    "status": "PASS",
+    "details": {
+      "overallQuality": 0.537,
+      "pitchCorrelation": 0.89,
+      "timbreMatch": 0.82,
+      "passed": true
+    }
+  },
+  {
+    "name": "10. Realtime Generation Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "11. Playback File Reference & Integrity",
+    "status": "PASS",
+    "details": {
+      "filePath": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\generated_audio\\gen_1787509323388.wav",
+      "sizeBytes": 211278,
+      "accessible": true
+    }
+  },
+  {
+    "name": "12. Empty Text Synthesis Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": 400,
+      "detail": "Cannot synthesize empty text"
+    }
+  },
+  {
+    "name": "13. Multi-Tenant Generated Asset Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBAssetCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "14. 10s Reference Voice Synthesis Benchmark",
+    "status": "PASS",
+    "details": {
+      "generatedDuration": 3.6,
+      "executionMs": 40,
+      "totalRoundtripMs": 81,
+      "speedFactor": "44.4x real-time"
+    }
+  },
+  {
+    "name": "15. 30s Paragraph Voice Synthesis Benchmark",
+    "status": "PASS",
+    "details": {
+      "generatedDuration": 10,
+      "executionMs": 40,
+      "totalRoundtripMs": 82,
+      "speedFactor": "122.0x real-time"
+    }
+  },
+  {
+    "name": "16. 60s Script Voice Synthesis Benchmark",
+    "status": "PASS",
+    "details": {
+      "generatedDuration": 18.4,
+      "executionMs": 41,
+      "totalRoundtripMs": 80,
+      "speedFactor": "230.0x real-time"
+    }
+  }
+]

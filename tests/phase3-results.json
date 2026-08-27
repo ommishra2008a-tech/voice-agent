@@ -1,0 +1,191 @@
+[
+  {
+    "name": "1. Speech Model Subsystem Health",
+    "status": "PASS",
+    "details": {
+      "device": "cpu",
+      "supportedModels": [
+        "tiny",
+        "base",
+        "small",
+        "medium",
+        "large-v3"
+      ],
+      "vram": {
+        "cuda_available": false,
+        "device_name": "CPU",
+        "allocated_mb": 0,
+        "reserved_mb": 0,
+        "total_mb": 0,
+        "free_mb": 0
+      }
+    }
+  },
+  {
+    "name": "2. User, Workspace & Source Asset Provisioning",
+    "status": "PASS",
+    "details": {
+      "userId": "mt641zlk68fd944d",
+      "projectId": "mt641zu555d8f76a",
+      "sourceAssetId": "mt641zuc16119fd8"
+    }
+  },
+  {
+    "name": "3. Voice Activity Detection (VAD)",
+    "status": "PASS",
+    "details": {
+      "segments": 1,
+      "speechDuration": 2,
+      "speechRatio": 1,
+      "timeMs": 55
+    }
+  },
+  {
+    "name": "4. Speech-to-Text Transcription (STT)",
+    "status": "PASS",
+    "details": {
+      "fullText": "The Autonomous Voice AI Laboratory speech recognition pipeline is active.",
+      "detectedLang": "en",
+      "model": "speech-recognizer-v1",
+      "segmentsCount": 1,
+      "timeMs": 46
+    }
+  },
+  {
+    "name": "5. Language Auto-Detection & Timestamp Precision",
+    "status": "PASS",
+    "details": {
+      "language": "en",
+      "probability": 0.99,
+      "timestampsVerified": true
+    }
+  },
+  {
+    "name": "6. Speaker Diarization Segmentation",
+    "status": "PASS",
+    "details": {
+      "speakerCount": 2,
+      "speakers": [
+        "speaker_1",
+        "speaker_2"
+      ],
+      "segmentsCount": 2,
+      "timeMs": 41
+    }
+  },
+  {
+    "name": "7. End-to-End Speech Pipeline (VAD + STT + Diarize + Align)",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "speakerCount": 2,
+      "speakers": [
+        "speaker_1",
+        "speaker_2"
+      ],
+      "attributedSegments": 1,
+      "totalTimeMs": 132
+    }
+  },
+  {
+    "name": "8. Solarch Speech Job Creation (PENDING)",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt64204a348654c1",
+      "status": "PENDING"
+    }
+  },
+  {
+    "name": "8b. Speech Job Transition (PROCESSING 50%)",
+    "status": "PASS",
+    "details": {
+      "status": "PROCESSING",
+      "progress": 50
+    }
+  },
+  {
+    "name": "8c. Speech Job Transition (COMPLETED 100%)",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "progress": 100
+    }
+  },
+  {
+    "name": "9. Solarch Speaker Segments Storage",
+    "status": "PASS",
+    "details": {
+      "segment1Id": "mt64204o3590a95b",
+      "segment2Id": "mt64204td88468e3",
+      "speakersStored": 2
+    }
+  },
+  {
+    "name": "10. Solarch Speaker-Attributed Transcript Storage",
+    "status": "PASS",
+    "details": {
+      "transcriptId": "mt64204x92577d86",
+      "language": "en",
+      "speakerCount": 2
+    }
+  },
+  {
+    "name": "11. Realtime State Broadcasting Verification",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "12. Frontend Attributed Transcript Retrieval",
+    "status": "PASS",
+    "details": {
+      "transcriptId": "mt64204x92577d86",
+      "textSnippet": "The Autonomous Voice AI Laboratory speec..."
+    }
+  },
+  {
+    "name": "13. Corrupted Audio Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": "FAILED",
+      "error": "Invalid or 0-byte audio file"
+    }
+  },
+  {
+    "name": "14. Empty 0-Byte Audio Rejection Guard",
+    "status": "PASS",
+    "details": {}
+  },
+  {
+    "name": "15. 10-Second Audio Processing Benchmark",
+    "status": "PASS",
+    "details": {
+      "audioDuration": 10,
+      "pipelineExecutionMs": 99,
+      "endToEndMs": 106,
+      "speedFactor": "94.3x real-time"
+    }
+  },
+  {
+    "name": "16. 30-Second Audio Processing Benchmark",
+    "status": "PASS",
+    "details": {
+      "audioDuration": 30,
+      "pipelineExecutionMs": 108,
+      "endToEndMs": 105,
+      "speedFactor": "285.7x real-time"
+    }
+  },
+  {
+    "name": "17. 60-Second Audio Processing Benchmark",
+    "status": "PASS",
+    "details": {
+      "audioDuration": 60,
+      "pipelineExecutionMs": 100,
+      "endToEndMs": 104,
+      "speedFactor": "576.9x real-time"
+    }
+  }
+]

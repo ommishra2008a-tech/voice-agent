@@ -1,0 +1,69 @@
+{
+  "suite": "Phase 12A Follow-Up — Reusable Saved Voices & Preview Test",
+  "timestamp": "2026-08-27T08:50:10.597Z",
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "tests": [
+    {
+      "testId": "TEST-12A-FU-01",
+      "name": "Real Speech Preview Test Before Save",
+      "status": "PASSED",
+      "detail": "Preview generated: D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\prev_1695fa56d2a8.wav, Duration: 4.224667s, Valid Speech: true"
+    },
+    {
+      "testId": "TEST-12A-FU-02",
+      "name": "Audible Speech Verification of Preview",
+      "status": "PASSED",
+      "detail": "File size: 202828 bytes, File exists and contains non-empty waveform"
+    },
+    {
+      "testId": "TEST-12A-FU-03",
+      "name": "Durable Voice Profile Creation & File Persistence",
+      "status": "PASSED",
+      "detail": "Profile ID: vp_1d6d7700f7454758, Durable Ref: D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\voice_profiles\\vp_1d6d7700f7454758\\reference.wav (Exists: true), Quality: 78.3/100"
+    },
+    {
+      "testId": "TEST-12A-FU-04",
+      "name": "Voice Profile Metadata Retrieval",
+      "status": "PASSED",
+      "detail": "Name: Voice Profile vp_1d6d7, Version: 1.0.0, Primary Ref: D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\voice_profiles\\vp_1d6d7700f7454758\\reference.wav"
+    },
+    {
+      "testId": "TEST-12A-FU-05",
+      "name": "Reference-Free Speech Synthesis with Saved Voice Profile",
+      "status": "PASSED",
+      "detail": "Generated speech for NEW text with saved voice 'vp_1d6d7700f7454758'. Duration: 6.252s, Audio: D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787820598648.wav"
+    },
+    {
+      "testId": "TEST-12A-FU-06",
+      "name": "Quality-Aware Multi-Sample Voice Profile Aggregation",
+      "status": "PASSED",
+      "detail": "Aggregated 2 samples. Weights: S1=0.5, S2=0.5, Quality: 78.3/100"
+    },
+    {
+      "testId": "TEST-12A-FU-07",
+      "name": "Voice Profile Incremental Versioning Support",
+      "status": "PASSED",
+      "detail": "Profile ID: vp_1d6d7700f7454758 updated to Version: 1.1.0 without overwrite"
+    },
+    {
+      "testId": "TEST-12A-FU-08",
+      "name": "Engine Compatibility — FastPitch Rejection with Error Code",
+      "status": "PASSED",
+      "detail": "Correctly returned 400 with detail: VOICE_PROFILE_NOT_SUPPORTED_BY_ENGINE: FastPitch is a single-speaker baseline model and does not support zero-shot voice cloning with custom voice profiles. Please select XTTS v2, OpenVoice v2, or CosyVoice."
+    },
+    {
+      "testId": "TEST-12A-FU-09",
+      "name": "Engine Compatibility — OpenVoice v2 Routing with Saved Voice",
+      "status": "PASSED",
+      "detail": "Generated with model: openvoice-v2, Duration: 4.406s"
+    },
+    {
+      "testId": "TEST-12A-FU-10",
+      "name": "Engine Compatibility — CosyVoice Routing with Saved Voice",
+      "status": "PASSED",
+      "detail": "Generated with model: cosyvoice, Duration: 5.43s"
+    }
+  ]
+}

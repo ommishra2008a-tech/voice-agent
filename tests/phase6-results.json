@@ -1,0 +1,207 @@
+[
+  {
+    "name": "1. RAG Service Health & Subsystem State",
+    "status": "PASS",
+    "details": {
+      "status": "healthy",
+      "vector_store": "SolarchHybridVectorStore",
+      "embedding_model": "dense-semantic-384d",
+      "embedding_dimension": 384,
+      "total_indexed_chunks": 0
+    }
+  },
+  {
+    "name": "2. User, Tenant & Knowledge Workspace Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt65llozc07f2b8f",
+      "projectA": "mt65lm1d8af545fd",
+      "userB": "mt65llv8b9f0038c",
+      "projectB": "mt65lm1hd4aadc84"
+    }
+  },
+  {
+    "name": "3. Dense 384-D Text Embedding Generation",
+    "status": "PASS",
+    "details": {
+      "dimension": 384,
+      "sampleHead": [
+        0.002265,
+        -0.052317,
+        0.013055,
+        -0.013055
+      ],
+      "timeMs": 1
+    }
+  },
+  {
+    "name": "4. Document Ingestion & Overlapping Chunking",
+    "status": "PASS",
+    "details": {
+      "documentId": "doc_1787510501355",
+      "chunksCount": 3,
+      "dimension": 384,
+      "timeMs": 10
+    }
+  },
+  {
+    "name": "5. Solarch Document & Chunk Metadata Storage",
+    "status": "PASS",
+    "details": {
+      "documentId": "mt65lm2la1a7c242",
+      "chunkId": "mt65lm2s30c02301",
+      "indexingStatus": "INDEXED"
+    }
+  },
+  {
+    "name": "6. Semantic Vector Retrieval (Top-K)",
+    "status": "PASS",
+    "details": {
+      "query": "What sample rate is used for normalized audio in Voice AI?",
+      "topScore": 0.083,
+      "topCitation": "Doc: doc_1787510501355 [Chunk 0]",
+      "timeMs": 4
+    }
+  },
+  {
+    "name": "7. Metadata-Constrained Vector Filtering",
+    "status": "PASS",
+    "details": {
+      "documentFilter": "doc_1787510501355",
+      "resultsCount": 1,
+      "allMatch": true
+    }
+  },
+  {
+    "name": "8. Speaker-Attributed Transcript Ingestion",
+    "status": "PASS",
+    "details": {
+      "documentId": "doc_1787510501398",
+      "segmentsIndexed": 2
+    }
+  },
+  {
+    "name": "9. Speaker & Timestamp Metadata Preservation",
+    "status": "PASS",
+    "details": {
+      "speaker": "speaker_2",
+      "timeSpan": "4.5s - 9.8s",
+      "citation": "Transcript (speaker_2 [4.5s-9.8s])",
+      "textSnippet": "The Whisper transcription accuracy is excellent and diarization cleanly separated our speakers."
+    }
+  },
+  {
+    "name": "10. Lexical-Semantic Fusion Reranking",
+    "status": "PASS",
+    "details": {
+      "topRankedSnippet": "The Autonomous Voice AI Laboratory integrates...",
+      "rerankedCount": 2,
+      "timeMs": 0
+    }
+  },
+  {
+    "name": "11. Context Builder with Citations for LLM",
+    "status": "PASS",
+    "details": {
+      "chunksUsed": 3,
+      "citations": [
+        "Doc: doc_1787510501355 [Chunk 1]",
+        "Doc: doc_1787510501355 [Chunk 0]",
+        "Transcript (speaker_2 [4.5s-9.8s])"
+      ],
+      "contextLength": 716
+    }
+  },
+  {
+    "name": "12. Multi-Tenant Project Knowledge Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "queriedProject": "mt65lm1hd4aadc84",
+      "returnedResults": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "13a. Solarch RAG Job Creation (PENDING)",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt65lm4440b67acf",
+      "status": "PENDING"
+    }
+  },
+  {
+    "name": "13b. RAG Job Transition (PROCESSING)",
+    "status": "PASS",
+    "details": {
+      "status": "PROCESSING",
+      "indexed": 5
+    }
+  },
+  {
+    "name": "13c. RAG Job Transition (COMPLETED)",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "indexed": 10
+    }
+  },
+  {
+    "name": "14. Realtime Indexing Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "15. Solarch Native Vector Route Verification (404 Confirmed)",
+    "status": "PASS",
+    "details": {
+      "status": 404,
+      "decision": "Hybrid Architecture Active (Solarch BaaS Metadata + Python Vector Engine)"
+    }
+  },
+  {
+    "name": "16. 10 Chunks Ingestion & Indexing Benchmark",
+    "status": "PASS",
+    "details": {
+      "chunksCount": 9,
+      "indexingMs": 30,
+      "totalRoundtripMs": 36
+    }
+  },
+  {
+    "name": "17. 100 Chunks Ingestion & Indexing Benchmark",
+    "status": "PASS",
+    "details": {
+      "chunksCount": 94,
+      "indexingMs": 290,
+      "totalRoundtripMs": 297
+    }
+  },
+  {
+    "name": "18. 1,000 Chunks Ingestion & Indexing Benchmark",
+    "status": "PASS",
+    "details": {
+      "chunksCount": 875,
+      "indexingMs": 1940,
+      "totalRoundtripMs": 1948
+    }
+  },
+  {
+    "name": "19. Semantic Retrieval Latency over 1,000 Chunks",
+    "status": "PASS",
+    "details": {
+      "retrievalMs": 4,
+      "totalRoundtripMs": 9,
+      "topScore": 0.885
+    }
+  },
+  {
+    "name": "20. Document Deletion & Vector Lifecycle Cleanliness",
+    "status": "PASS",
+    "details": {
+      "verifiedDeleted": true
+    }
+  }
+]

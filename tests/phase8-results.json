@@ -1,0 +1,182 @@
+[
+  {
+    "name": "1. Media Source Providers Health & Registry",
+    "status": "PASS",
+    "details": {
+      "providersCount": 2,
+      "providers": [
+        "youtube",
+        "generic_media"
+      ]
+    }
+  },
+  {
+    "name": "2. User, Tenant & Ingestion Workspace Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt65xe616172899a",
+      "projectA": "mt65xeio4f251b3e",
+      "projectB": "mt65xeitab4cee67"
+    }
+  },
+  {
+    "name": "3. YouTube URL Detection & Metadata Probe",
+    "status": "PASS",
+    "details": {
+      "provider": "youtube",
+      "videoId": "dQw4w9WgXcQ",
+      "title": "State of Autonomous Voice AI & Neural Agents Review",
+      "channel": "AI Systems Research Lab",
+      "duration": 120,
+      "timeMs": 0
+    }
+  },
+  {
+    "name": "4. Generic Media Stream URL Probe",
+    "status": "PASS",
+    "details": {
+      "provider": "generic_media",
+      "title": "speech_interview.mp4"
+    }
+  },
+  {
+    "name": "5. Complete Media Source Ingestion & Diarization",
+    "status": "PASS",
+    "details": {
+      "sourceAssetId": "src_dQw4w9WgXcQ_1787511051",
+      "stages": [
+        "SOURCE_DETECTED",
+        "FETCHING",
+        "TRANSCRIBING",
+        "DIARIZING",
+        "ALIGNING",
+        "ANALYZING",
+        "INDEXING",
+        "READY"
+      ],
+      "segments": 3,
+      "speakersCount": 2,
+      "ragIndexed": 3,
+      "timeMs": 4
+    }
+  },
+  {
+    "name": "6. Solarch Source Asset Record Storage",
+    "status": "PASS",
+    "details": {
+      "assetId": "mt65xejgcb8357e9",
+      "name": "State of Autonomous Voice AI & Neural Agents Review",
+      "status": "READY"
+    }
+  },
+  {
+    "name": "7a. Solarch Media Job Creation (UPLOADING)",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt65xejk806783de",
+      "status": "UPLOADING"
+    }
+  },
+  {
+    "name": "7b. Media Job Transition (PROCESSING 60%)",
+    "status": "PASS",
+    "details": {
+      "status": "PROCESSING",
+      "progress": 60
+    }
+  },
+  {
+    "name": "7c. Media Job Transition (READY 100%)",
+    "status": "PASS",
+    "details": {
+      "status": "READY",
+      "progress": 100
+    }
+  },
+  {
+    "name": "8. Multi-Speaker Track Analysis & Metrics",
+    "status": "PASS",
+    "details": {
+      "speaker1": {
+        "duration": "14.3s",
+        "pct": "11.9%",
+        "f0": 145
+      },
+      "speaker2": {
+        "duration": "7.7s",
+        "pct": "6.4%",
+        "f0": 195
+      }
+    }
+  },
+  {
+    "name": "9. Target Speaker Selection & Candidate Profiling",
+    "status": "PASS",
+    "details": {
+      "selectedSpeaker": "speaker_2",
+      "voiceProfileId": "prof_src_dQw4w9WgXcQ_1787511051_speaker_2",
+      "qualityScore": 94.5
+    }
+  },
+  {
+    "name": "10. RAG Knowledge Retrieval with Speaker Attribution",
+    "status": "PASS",
+    "details": {
+      "speaker": "speaker_2",
+      "citation": "Transcript (speaker_2 [6.5s-14.2s])",
+      "snippet": "Today we are analyzing real-time acoustic normalization, Faster-Whisper, and vector search."
+    }
+  },
+  {
+    "name": "11. Realtime Media Sourcing Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "12. Multi-Tenant Source Asset Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBAssetCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "13. Invalid URL Format Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "valid": false,
+      "error": "No suitable provider adapter found for URL: ftp://not-a-valid-http-url"
+    }
+  },
+  {
+    "name": "14. Empty URL Probe Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": 400,
+      "detail": "Cannot probe empty URL"
+    }
+  },
+  {
+    "name": "15. YouTube Ingestion Pipeline Benchmark",
+    "status": "PASS",
+    "details": {
+      "provider": "youtube",
+      "stagesCount": 8,
+      "pipelineMs": 4,
+      "totalRoundtripMs": 8
+    }
+  },
+  {
+    "name": "16. Direct Media Stream Ingestion Benchmark",
+    "status": "PASS",
+    "details": {
+      "provider": "generic_media",
+      "stagesCount": 8,
+      "pipelineMs": 1,
+      "totalRoundtripMs": 4
+    }
+  }
+]

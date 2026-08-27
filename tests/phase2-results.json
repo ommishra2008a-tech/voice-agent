@@ -1,0 +1,196 @@
+[
+  {
+    "name": "1. Service Health (Solarch + Python)",
+    "status": "PASS",
+    "details": {
+      "solarch": "ok",
+      "python": "healthy",
+      "ffmpeg": true
+    }
+  },
+  {
+    "name": "2. Multi-Tenant User & Workspace Initialization",
+    "status": "PASS",
+    "details": {
+      "userA": "user_a_1787506872679@voiceai.lab",
+      "projectA": "mt63furned25e503",
+      "userB": "user_b_1787506873080@voiceai.lab",
+      "projectB": "mt63furv343cb22e"
+    }
+  },
+  {
+    "name": "3. Audio Probe: sample_speech.wav",
+    "status": "PASS",
+    "details": {
+      "format": "wav",
+      "duration": 2,
+      "sampleRate": 44100,
+      "channels": 2
+    }
+  },
+  {
+    "name": "3. Audio Probe: sample_podcast.mp3",
+    "status": "PASS",
+    "details": {
+      "format": "mp3",
+      "duration": 2.037551,
+      "sampleRate": 44100,
+      "channels": 2
+    }
+  },
+  {
+    "name": "3. Audio Probe: sample_lossless.flac",
+    "status": "PASS",
+    "details": {
+      "format": "flac",
+      "duration": 2,
+      "sampleRate": 44100,
+      "channels": 2
+    }
+  },
+  {
+    "name": "3. Audio Probe: sample_voice.ogg",
+    "status": "PASS",
+    "details": {
+      "format": "ogg",
+      "duration": 2,
+      "sampleRate": 44100,
+      "channels": 2
+    }
+  },
+  {
+    "name": "3. Audio Probe: sample_audiobook.m4a",
+    "status": "PASS",
+    "details": {
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "duration": 2,
+      "sampleRate": 44100,
+      "channels": 2
+    }
+  },
+  {
+    "name": "4. Audio Normalization (24kHz Mono WAV)",
+    "status": "PASS",
+    "details": {
+      "outputPath": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fixtures\\sample_speech_normalized_24k.wav",
+      "sampleRate": 24000,
+      "channels": 1,
+      "duration": 2,
+      "timeMs": 69
+    }
+  },
+  {
+    "name": "5. Video Ingestion & Audio Extraction (MP4 -> WAV)",
+    "status": "PASS",
+    "details": {
+      "videoResolution": "320x240",
+      "fps": 25,
+      "extractedDuration": 2.020125,
+      "timeMs": 44
+    }
+  },
+  {
+    "name": "6. End-to-End Media Pipeline Execution",
+    "status": "PASS",
+    "details": {
+      "status": "READY",
+      "processedAudio": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fixtures\\sample_interview_extracted_audio.wav",
+      "sampleRate": 24000,
+      "channels": 1,
+      "timeMs": 149
+    }
+  },
+  {
+    "name": "7. Solarch Source Asset Record Creation",
+    "status": "PASS",
+    "details": {
+      "sourceAssetId": "mt63fvc453d30e46",
+      "status": "READY",
+      "projectId": "mt63furned25e503"
+    }
+  },
+  {
+    "name": "8. Media Job Creation (UPLOADING)",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt63fvc97dbadd2f",
+      "status": "UPLOADING"
+    }
+  },
+  {
+    "name": "8b. Media Job Transition (PROCESSING 50%)",
+    "status": "PASS",
+    "details": {
+      "status": "PROCESSING",
+      "progress": 50
+    }
+  },
+  {
+    "name": "8c. Media Job Transition (READY 100%)",
+    "status": "PASS",
+    "details": {
+      "status": "READY",
+      "progress": 100,
+      "timeMs": 45
+    }
+  },
+  {
+    "name": "9. Realtime State Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "10. Multi-Tenant Project Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBAssetCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "11. Corrupted Media File Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "rejected": true,
+      "status": "FAILED",
+      "error": "ffprobe failed: Command '['C:\\\\ffmpeg\\\\ffprobe.EXE', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', 'D:\\\\testing\\\\projects\\\\AGENT\\\\voice-agent\\\\tests\\\\fixtures\\\\corrupted_media.wav']' returned non-zero exit status 1."
+    }
+  },
+  {
+    "name": "12. Empty 0-Byte File Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "rejected": true,
+      "error": "File is empty (0 bytes)"
+    }
+  },
+  {
+    "name": "13. Missing File Handling Guard",
+    "status": "PASS",
+    "details": {
+      "handledCleanly": true,
+      "error": "File not found: C:\\non_existent_path\\fake_audio.wav"
+    }
+  },
+  {
+    "name": "14. Media Processing Performance Benchmark",
+    "status": "PASS",
+    "details": {
+      "inputFormat": "44.1kHz Stereo WAV",
+      "outputFormat": "24kHz Mono 16-bit PCM WAV",
+      "ffmpegExecutionMs": 56,
+      "endToEndRoundtripMs": 100
+    }
+  },
+  {
+    "name": "15. Delete Media Asset Lifecycle",
+    "status": "PASS",
+    "details": {
+      "deletedId": "mt63fvc453d30e46",
+      "verifiedDeleted": true
+    }
+  }
+]

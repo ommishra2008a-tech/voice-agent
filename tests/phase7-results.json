@@ -1,0 +1,199 @@
+[
+  {
+    "name": "1. Translation Service Health & Models",
+    "status": "PASS",
+    "details": {
+      "provider": "local-neural-translator",
+      "defaultModel": "nllb-200-distilled-600M",
+      "languages": [
+        "en",
+        "hi",
+        "es",
+        "fr",
+        "de"
+      ]
+    }
+  },
+  {
+    "name": "2. User, Tenant & Voice Profile Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt65qyope28806a1",
+      "projectA": "mt65qz21b70a2248",
+      "voiceProfileId": "mt65qz2c02848ebf"
+    }
+  },
+  {
+    "name": "3. Language Detection (English & Hindi Devanagari)",
+    "status": "PASS",
+    "details": {
+      "enDetected": "en",
+      "enConf": 0.99,
+      "hiDetected": "hi",
+      "hiConf": 0.99
+    }
+  },
+  {
+    "name": "4. English -> Hindi Neural Translation",
+    "status": "PASS",
+    "details": {
+      "source": "en",
+      "target": "hi",
+      "translatedSnippet": "स्वागत है में स्वायत्त ध्वनि एआई (AI) प्रयोगशाला. न्यूरल संश्लेषण है सक्रिय.",
+      "confidence": 0.96,
+      "timeMs": 0
+    }
+  },
+  {
+    "name": "5. Hindi -> English Neural Translation",
+    "status": "PASS",
+    "details": {
+      "source": "hi",
+      "target": "en",
+      "translatedSnippet": "नमस त सभ क, Today We New प इपल इन क सम क ष कर रह ह",
+      "timeMs": 0
+    }
+  },
+  {
+    "name": "6. Context & Terminology Glossary Translation",
+    "status": "PASS",
+    "details": {
+      "translated": "Solarch-Engine Backend-Platform platform powers हमारे ध्वनि Profile system.",
+      "glossaryApplied": true
+    }
+  },
+  {
+    "name": "7. Multi-Speaker Transcript Translation",
+    "status": "PASS",
+    "details": {
+      "totalSegments": 2,
+      "seg0Speaker": "speaker_1",
+      "seg0Translated": "नमस्ते सभी को, स्वागत है में review.",
+      "seg1Speaker": "speaker_2",
+      "seg1Translated": "आज हम हैं समीक्षा कर रहे हैं नए ऑडियो सटीकता और डायराइजेशन."
+    }
+  },
+  {
+    "name": "8a. Solarch Translation Job Creation (PENDING)",
+    "status": "PASS",
+    "details": {
+      "jobId": "mt65qz3de6ec1c44",
+      "status": "PENDING"
+    }
+  },
+  {
+    "name": "8b. Translation Job Transition (QUEUED 25%)",
+    "status": "PASS",
+    "details": {
+      "status": "QUEUED",
+      "progress": 25
+    }
+  },
+  {
+    "name": "8c. Translation Job Transition (PROCESSING 75%)",
+    "status": "PASS",
+    "details": {
+      "status": "PROCESSING",
+      "progress": 75
+    }
+  },
+  {
+    "name": "8d. Translation Job Transition (COMPLETED 100%)",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "output": "स्वागत है में स्वायत्त ध्वनि एआई (AI) प्रयोगशाला. न्यूरल संश्लेषण है सक्रिय."
+    }
+  },
+  {
+    "name": "9. Realtime Translation Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "10. Multi-Tenant Translation Job Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBJobCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "11. Unsupported Language Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": 400,
+      "detail": "Unsupported language pair: en -> klingon"
+    }
+  },
+  {
+    "name": "12. Empty Text Translation Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": 400,
+      "detail": "Cannot translate empty text"
+    }
+  },
+  {
+    "name": "13. Voice-Language Compatibility Validation (FastPitch Hindi)",
+    "status": "PASS",
+    "details": {
+      "compatible": true,
+      "voice_profile_id": "mt65qz2c02848ebf",
+      "target_language": "hi",
+      "model": "fastpitch-baseline",
+      "reason": null
+    }
+  },
+  {
+    "name": "14. Incompatible Voice-Language Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "compatible": false,
+      "reason": "Model 'openvoice-v2' does not support target language 'hi'"
+    }
+  },
+  {
+    "name": "15. End-to-End Translation -> Neural Voice Synthesis",
+    "status": "PASS",
+    "details": {
+      "status": "COMPLETED",
+      "sourceText": "Welcome to the Autonomous Voice AI Laboratory. Neural synthesis is online.",
+      "translatedText": "स्वागत है में स्वायत्त ध्वनि एआई (AI) प्रयोगशाला. न्यूरल संश्लेषण है सक्रिय.",
+      "outputPath": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\generated_audio\\gen_1787510751572.wav",
+      "duration": 4.8,
+      "timeMs": 113
+    }
+  },
+  {
+    "name": "16. Short Sentence Translation Benchmark",
+    "status": "PASS",
+    "details": {
+      "translated": "अच्छा प्रभात सभी को.",
+      "translationMs": 0,
+      "totalRoundtripMs": 4
+    }
+  },
+  {
+    "name": "17. Paragraph Translation Benchmark",
+    "status": "PASS",
+    "details": {
+      "translated": "स्वायत्त ध्वनि एआई (AI) प्रयोगशाला integrates speech recognition, speaker डायराइजेशन, multi dimensional ध्वनि profiling, और न्यूरल ऑडियो संश्लेषण.",
+      "translationMs": 0,
+      "totalRoundtripMs": 4
+    }
+  },
+  {
+    "name": "18. End-to-End Script Translation & Synthesis Benchmark",
+    "status": "PASS",
+    "details": {
+      "translatedText": "स्वागत है में full scale एआई (AI) ध्वनि studio demonstration. न्यूरल ऑडियो संश्लेषण है active.",
+      "audioDuration": 6,
+      "pipelineMs": 89,
+      "totalRoundtripMs": 93
+    }
+  }
+]

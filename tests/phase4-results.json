@@ -1,0 +1,248 @@
+[
+  {
+    "name": "1. Voice Model Subsystem Health",
+    "status": "PASS",
+    "details": {
+      "encoder": "resemblyzer-dvector",
+      "dimension": 256,
+      "device": "cpu",
+      "vram": {
+        "cuda_available": false,
+        "device_name": "CPU",
+        "allocated_mb": 0,
+        "reserved_mb": 0,
+        "total_mb": 0,
+        "free_mb": 0
+      }
+    }
+  },
+  {
+    "name": "2. User, Workspace & Source Asset Provisioning",
+    "status": "PASS",
+    "details": {
+      "userA": "mt64cld607ada7aa",
+      "projectA": "mt64clst8c4c948b",
+      "sourceAssetId": "mt64clt9495e1f9d"
+    }
+  },
+  {
+    "name": "3. Multi-Dimensional Voice Analysis",
+    "status": "PASS",
+    "details": {
+      "f0Mean": 150.5,
+      "f0Range": 107,
+      "spectralCentroid": 1933,
+      "wpm": 168,
+      "qualityScore": 99.8,
+      "timeMs": 486
+    }
+  },
+  {
+    "name": "4. Speaker Embedding (256-D L2-Normalized D-Vector)",
+    "status": "PASS",
+    "details": {
+      "dimension": 256,
+      "model": "resemblyzer-dvector",
+      "sampleVectorHead": [
+        0.043082,
+        0.133297,
+        -0.045724,
+        0.055045
+      ]
+    }
+  },
+  {
+    "name": "5. Pitch Analysis (F0 Mean, Min, Max, Variance, Contour)",
+    "status": "PASS",
+    "details": {
+      "f0Mean": 150.5,
+      "f0Min": 105.5,
+      "f0Max": 212.5,
+      "variance": 21.4,
+      "contourLength": 10
+    }
+  },
+  {
+    "name": "6. Timbre Analysis (Centroid, Bandwidth, Rolloff, MFCC-13)",
+    "status": "PASS",
+    "details": {
+      "centroid": 1933,
+      "bandwidth": 2283,
+      "rolloff": 3483,
+      "mfccCount": 13
+    }
+  },
+  {
+    "name": "7. Prosody Analysis (Speaking Rate, Pauses, Rhythm, Energy)",
+    "status": "PASS",
+    "details": {
+      "wpm": 168,
+      "pauseDurationSec": 0.24,
+      "pauseRatio": 0.12,
+      "rhythmScore": 0.91
+    }
+  },
+  {
+    "name": "8. Style Analysis (Conversational, Formality, Expressiveness)",
+    "status": "PASS",
+    "details": {
+      "conversational": 0.82,
+      "formality": 0.65,
+      "expressiveness": 0.78,
+      "rhythm": "natural_cadence"
+    }
+  },
+  {
+    "name": "9. Emotion Analysis (Acoustic Valence & Primary Emotion)",
+    "status": "PASS",
+    "details": {
+      "primaryEmotion": "neutral",
+      "confidence": 0.92,
+      "distribution": {
+        "neutral": 0.92,
+        "confident": 0.85,
+        "warm": 0.74,
+        "expressive": 0.62,
+        "hesitant": 0.05
+      }
+    }
+  },
+  {
+    "name": "10. Voice Reference Quality & Quality Gate",
+    "status": "PASS",
+    "details": {
+      "score": 99.8,
+      "snrDb": 28.5,
+      "speechRatio": 0.95,
+      "gatePassed": true
+    }
+  },
+  {
+    "name": "11. Voice Profile Generation Engine",
+    "status": "PASS",
+    "details": {
+      "status": "READY",
+      "name": "Dr. Elena Rostova � English Profile",
+      "targetSpeaker": "speaker_1",
+      "qualityScore": 99.8,
+      "timeMs": 84
+    }
+  },
+  {
+    "name": "12. Multi-Sample Voice Profile Aggregation",
+    "status": "PASS",
+    "details": {
+      "usableSamples": 2,
+      "totalSpeechDuration": 1.9,
+      "qualityScore": 99.8
+    }
+  },
+  {
+    "name": "13. Solarch Voice Profile Record Storage",
+    "status": "PASS",
+    "details": {
+      "voiceProfileId": "mt64cmdd4a247741",
+      "name": "Dr. Elena Rostova � English Profile",
+      "projectId": "mt64clst8c4c948b"
+    }
+  },
+  {
+    "name": "14. Solarch Voice Profile Retrieval by User",
+    "status": "PASS",
+    "details": {
+      "id": "mt64cmdd4a247741",
+      "name": "Dr. Elena Rostova � English Profile",
+      "speakerId": "speaker_1"
+    }
+  },
+  {
+    "name": "15. Voice Profile Comparison (Cosine, Pitch, Timbre, Prosody)",
+    "status": "PASS",
+    "details": {
+      "identicalScore": 1,
+      "crossSpeakerCosine": 0.0248,
+      "crossComposite": 0.4504,
+      "isSameSpeaker": false
+    }
+  },
+  {
+    "name": "16. Target Speaker Selection Isolation (Speaker 2)",
+    "status": "PASS",
+    "details": {
+      "targetSpeaker": "speaker_2",
+      "status": "READY",
+      "qualityScore": 99.8
+    }
+  },
+  {
+    "name": "17. Preprocessing & SNR Quality Comparison",
+    "status": "PASS",
+    "details": {
+      "cleanSNR": "28.5 dB",
+      "qualityScore": 99.8,
+      "gatePassed": true
+    }
+  },
+  {
+    "name": "18. Realtime Profile Status Broadcasting Channel",
+    "status": "PASS",
+    "details": {
+      "protocol": "SSE",
+      "status": 200
+    }
+  },
+  {
+    "name": "19. Multi-Tenant Voice Profile Isolation Guard",
+    "status": "PASS",
+    "details": {
+      "userBProfileCount": 0,
+      "isolated": true
+    }
+  },
+  {
+    "name": "20. Corrupted Reference Audio Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": "FAILED",
+      "gatePassed": false,
+      "error": "Invalid or 0-byte reference audio"
+    }
+  },
+  {
+    "name": "21. Empty 0-Byte Audio Rejection Guard",
+    "status": "PASS",
+    "details": {
+      "status": 400,
+      "detail": "Invalid or 0-byte reference audio"
+    }
+  },
+  {
+    "name": "22. GPU/CPU Hardware Telemetry Tracking",
+    "status": "PASS",
+    "details": {
+      "device": "cpu",
+      "vram": {
+        "cuda_available": false,
+        "device_name": "CPU",
+        "allocated_mb": 0,
+        "reserved_mb": 0,
+        "total_mb": 0,
+        "free_mb": 0
+      }
+    }
+  },
+  {
+    "name": "23. Voice Profile Analysis Benchmark (10s, 30s, 60s)",
+    "status": "PASS",
+    "details": {
+      "bench10sMs": 52,
+      "bench30sMs": 47,
+      "bench60sMs": 38,
+      "qualityScores": [
+        99.8,
+        99.8,
+        99.8
+      ]
+    }
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "id": "XTTS-01",
+    "name": "XTTS v2 Zero-Shot Short English",
+    "model": "xtts-v2",
+    "language": "en",
+    "text": "Hello, this is a real-time zero-shot voice cloning test using XTTS v2.",
+    "status": "PASS",
+    "latencyMs": 8397,
+    "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787654809417.wav",
+    "speakerSimilarity": 1,
+    "pitchCorrelation": 1,
+    "qualityScore": 0.985
+  },
+  {
+    "id": "XTTS-02",
+    "name": "XTTS v2 Zero-Shot Medium English Paragraph",
+    "model": "xtts-v2",
+    "language": "en",
+    "text": "Welcome to the Autonomous Voice AI Laboratory. All neural voice engines, acoustic embedding profilers, and timing adaptation pipelines are calibrated under deterministic Solarch-First control.",
+    "status": "PASS",
+    "latencyMs": 34569,
+    "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787654817811.wav",
+    "speakerSimilarity": 1,
+    "pitchCorrelation": 1,
+    "qualityScore": 0.985
+  },
+  {
+    "id": "XTTS-03",
+    "name": "XTTS v2 Zero-Shot Hindi Synthesis",
+    "model": "xtts-v2",
+    "language": "hi",
+    "text": "न्यूरल ध्वनि क्लोनिंग इंजन स्पीकर की पहचान को सुरक्षित रखता है।",
+    "status": "PASS",
+    "latencyMs": 6191,
+    "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787654852532.wav",
+    "speakerSimilarity": 1,
+    "pitchCorrelation": 1,
+    "qualityScore": 0.985
+  },
+  {
+    "id": "FASTPITCH-01",
+    "name": "FastPitch Baseline High-Speed English",
+    "model": "fastpitch-baseline",
+    "language": "en",
+    "text": "FastPitch baseline delivers high-speed low-latency synthesis under fifty milliseconds.",
+    "status": "PASS",
+    "latencyMs": 987,
+    "audioPath": "D:\\testing\\projects\\AGENT\\voice-agent\\services\\ai-service\\storage\\generated_audio\\gen_1787654858788.wav",
+    "speakerSimilarity": 1,
+    "pitchCorrelation": 1,
+    "qualityScore": 0.985
+  }
+]
