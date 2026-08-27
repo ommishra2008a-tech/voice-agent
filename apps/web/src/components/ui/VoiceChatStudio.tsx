@@ -228,9 +228,14 @@ export default function VoiceChatStudio({
       const items = await solarch.getVoiceProfiles(project.id);
       setProfiles(items);
       const savedId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_id_${project.id}`) : null;
+      const savedVoiceProfId = typeof window !== "undefined" ? localStorage.getItem(`active_voice_prof_id_${project.id}`) : null;
       const savedName = typeof window !== "undefined" ? localStorage.getItem(`active_voice_name_${project.id}`) : null;
       if (items.length > 0) {
-        const match = items.find((p) => (savedId && p.id === savedId) || (savedName && p.name === savedName));
+        const match = items.find((p) => 
+          (savedId && p.id === savedId) || 
+          (savedVoiceProfId && (p.voiceProfileId === savedVoiceProfId || p.sourceAssetId === savedVoiceProfId)) ||
+          (savedName && p.name.toLowerCase() === savedName.toLowerCase())
+        );
         setSelectedProfile(match || items[0]);
       }
     } catch (e) {}
@@ -253,9 +258,10 @@ export default function VoiceChatStudio({
     setSelectedProfile(profile);
     if (project && typeof window !== "undefined") {
       localStorage.setItem(`active_voice_id_${project.id}`, profile.id || "");
+      localStorage.setItem(`active_voice_prof_id_${project.id}`, profile.voiceProfileId || profile.sourceAssetId || "");
       localStorage.setItem(`active_voice_name_${project.id}`, profile.name);
-      if (profile.primaryReferencePath) {
-        localStorage.setItem(`active_voice_ref_${project.id}`, profile.primaryReferencePath);
+      if (profile.primaryReferencePath || profile.referenceAudio) {
+        localStorage.setItem(`active_voice_ref_${project.id}`, profile.primaryReferencePath || profile.referenceAudio || "");
       }
     }
   };
@@ -274,14 +280,10 @@ export default function VoiceChatStudio({
     const file = e.target.files?.[0];
     if (!file) return;
     setIsPlusMenuOpen(false);
-    setActiveContext({
-      type: "audio",
-      name: file.name,
-      fileUrl: URL.createObjectURL(file),
-      size: file.size
-    });
+    // Phase 12C: Explicitly do NOT set generic media context so "Process audio:" is not automatically triggered
+    setActiveContext(null);
 
-    // Phase 12A: Upload -> Analyze -> Preview Test Pipeline
+    // Phase 12A/12C: Upload -> Analyze -> Preview Test Pipeline
     const analysisMsgId = `analysis_${Date.now()}`;
     const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -290,7 +292,7 @@ export default function VoiceChatStudio({
       {
         id: `user_upload_${Date.now()}`,
         sender: "user",
-        text: `Uploaded reference audio: ${file.name}`,
+        text: `Uploaded voice reference: ${file.name}`,
         timestamp: timeStr
       },
       {
@@ -393,8 +395,8 @@ export default function VoiceChatStudio({
                 ...msg,
                 status: analysisStatus,
                 text: result.quality_gate_passed
-                  ? `Voice analysis & preview test ready — Quality: ${result.quality_score}/100 ✓. Listen to the preview below and save your voice.`
-                  : `Voice analysis complete — Needs review (${result.rejection_reason || "Quality below threshold"})`,
+                  ? `Voice analysis & preview test ready — Reference Quality: ${result.quality_score}/100 ✓. Listen to the preview below and save your voice.`
+                  : `Voice analysis complete — Needs review (${result.rejection_reason || "Reference Quality below threshold"})`,
                 analysisResult: result,
                 audioUrl: previewUrl
               }
@@ -420,7 +422,7 @@ export default function VoiceChatStudio({
     }
   };
 
-  // Phase 12A: Save analyzed voice as a reusable Voice Profile
+  // Phase 12A/12C: Save analyzed voice as a reusable Voice Profile with canonical linkage
   const handleSaveVoiceProfile = async (analysisResult: VoiceAnalysisResult, profileName: string) => {
     if (!project || savingProfile || !profileName.trim()) return;
     setSavingProfile(true);
@@ -447,12 +449,20 @@ export default function VoiceChatStudio({
       const profileData = await res.json();
 
       if (res.ok && (profileData.status === "READY" || profileData.status === "NEEDS_REVIEW")) {
-        // Persist to Solarch
+        const durableRef = profileData.primary_reference_path || analysisResult.server_audio_path;
+        const voiceProfId = profileData.voice_profile_id;
+
+        // Persist to Solarch with canonical audio and profile linkage
         const solarchProfile: VoiceProfileRecord = {
           projectId: project.id,
           userId,
           name: profileName.trim(),
           speakerId: "speaker_1",
+          voiceProfileId: voiceProfId,
+          sourceAssetId: voiceProfId,
+          referenceAudio: durableRef,
+          primaryReferencePath: durableRef,
+          referenceAudioPaths: profileData.reference_audio_paths || [durableRef],
           speakerEmbedding: profileData.embedding?.embedding || [],
           pitchStats: profileData.pitch,
           timbreCharacteristics: profileData.timbre,
@@ -465,8 +475,6 @@ export default function VoiceChatStudio({
           profileVersion: profileData.profile_version || "1.0.0",
           encoderVersion: profileData.encoder_version || "spectral-fingerprint-v1.0.0",
           analysisVersion: profileData.analysis_version || "phase12a",
-          referenceAudioPaths: profileData.reference_audio_paths || [analysisResult.server_audio_path],
-          primaryReferencePath: profileData.primary_reference_path || analysisResult.server_audio_path,
           previewAudioUrl: analysisResult.preview_audio_url,
           supportedEngines: profileData.supported_engines || ["xtts-v2", "openvoice-v2", "cosyvoice"],
           language
@@ -474,7 +482,14 @@ export default function VoiceChatStudio({
 
         try {
           const saved = await solarch.createVoiceProfile(solarchProfile);
-          const newProfile: VoiceProfileRecord = { ...solarchProfile, id: saved.id || profileData.voice_profile_id };
+          const newProfile: VoiceProfileRecord = {
+            ...solarchProfile,
+            id: saved.id || voiceProfId,
+            voiceProfileId: voiceProfId,
+            sourceAssetId: voiceProfId,
+            primaryReferencePath: durableRef,
+            referenceAudio: durableRef
+          };
           handleProfileCreated(newProfile);
 
           // Add confirmation message
@@ -493,7 +508,11 @@ export default function VoiceChatStudio({
           console.warn("Solarch persistence fallback:", solarchErr);
           const fallbackProfile: VoiceProfileRecord = {
             ...solarchProfile,
-            id: profileData.voice_profile_id
+            id: voiceProfId,
+            voiceProfileId: voiceProfId,
+            sourceAssetId: voiceProfId,
+            primaryReferencePath: durableRef,
+            referenceAudio: durableRef
           };
           handleProfileCreated(fallbackProfile);
 
@@ -580,7 +599,7 @@ export default function VoiceChatStudio({
         {
           id: warnId,
           sender: "ai",
-          text: "Please add a file (audio, video, or script) or type text first.",
+          text: "Please type the text you want the voice to say.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           status: "COMPLETED"
         }
@@ -588,7 +607,8 @@ export default function VoiceChatStudio({
       return;
     }
 
-    const userText = rawInput || (activeContext ? `Process ${activeContext.type}: ${activeContext.name}` : "");
+    // Phase 12C: Never emit "Process audio:" for voice cloning reference audio
+    const userText = rawInput || (activeContext && activeContext.type === "video" ? `Dub Video: ${activeContext.name}` : (activeContext?.content || ""));
     setInputText("");
     setIsGenerating(true);
 
@@ -792,14 +812,16 @@ export default function VoiceChatStudio({
     setActiveMonitorMsg(newAiMsg);
 
     try {
-      const activeRef = selectedProfile?.primaryReferencePath || (selectedProfile?.referenceAudioPaths || [])[0];
+      const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
+      const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || profileId;
+
       const res = await fetch("http://localhost:8000/v1/speech/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project_id: projectId,
           user_id: userId,
-          voice_profile_id: selectedProfile?.id || profileId,
+          voice_profile_id: activeProfileId,
           reference_audio_path: activeRef || undefined,
           text: userText,
           model: model,
@@ -867,15 +889,16 @@ export default function VoiceChatStudio({
     setMessages((prev) => [...prev, pendingMsg]);
 
     try {
-      const activeRef = selectedProfile?.primaryReferencePath || (selectedProfile?.referenceAudioPaths || [])[0];
-      const profileId = selectedProfile?.id || (profiles.length > 0 ? profiles[0].id : "mt8jhzowa74f845e");
+      const activeRef = selectedProfile?.primaryReferencePath || selectedProfile?.referenceAudio || (selectedProfile?.referenceAudioPaths || [])[0];
+      const activeProfileId = selectedProfile?.voiceProfileId || selectedProfile?.sourceAssetId || selectedProfile?.id || "default";
+
       const res = await fetch("http://localhost:8000/v1/speech/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project_id: project.id,
           user_id: project.userId || "u1",
-          voice_profile_id: profileId,
+          voice_profile_id: activeProfileId,
           reference_audio_path: activeRef || undefined,
           text: transMsg.translatedText,
           model: model,

@@ -363,7 +363,7 @@ class XTTSv2Adapter(VoiceEngine):
                 logger.info(f"[XTTSv2] Resolved from storage candidate: {abs_p}")
                 return ReferenceAudioPreprocessor.get_clean_reference(abs_p)
 
-        # 5. Query Solarch BaaS PocketBase record by ID or Name
+        # 5. Query Solarch BaaS PocketBase record by ID, sourceAssetId, or Name
         try:
             import urllib.request
             import urllib.parse
@@ -376,15 +376,27 @@ class XTTSv2Adapter(VoiceEngine):
                 with urllib.request.urlopen(req, timeout=1.0) as resp:
                     if resp.status == 200:
                         rec_data = json.loads(resp.read().decode("utf-8"))
-                        p_ref = rec_data.get("primaryReferencePath") or (rec_data.get("referenceAudioPaths") or [None])[0]
+                        p_ref = (
+                            rec_data.get("primaryReferencePath")
+                            or rec_data.get("referenceAudio")
+                            or (rec_data.get("referenceAudioPaths") or [None])[0]
+                        )
                         if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
-                            logger.info(f"[XTTSv2] Resolved from Solarch BaaS record: {p_ref}")
+                            logger.info(f"[XTTSv2] Resolved from Solarch BaaS record audio field: {p_ref}")
                             return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
+                        
+                        # Check if record has sourceAssetId pointing to durable storage
+                        src_asset = rec_data.get("sourceAssetId") or rec_data.get("voiceProfileId")
+                        if src_asset:
+                            asset_ref = os.path.join(os.getcwd(), "storage", "voice_profiles", src_asset, "reference.wav")
+                            if os.path.exists(asset_ref) and os.path.getsize(asset_ref) > 1000:
+                                logger.info(f"[XTTSv2] Resolved from Solarch sourceAssetId storage: {asset_ref}")
+                                return ReferenceAudioPreprocessor.get_clean_reference(asset_ref)
             except Exception:
                 pass
 
-            # Try search filter by name or voiceProfileId
-            filter_expr = urllib.parse.quote(f"(name='{voice_profile_id}' || id='{voice_profile_id}')")
+            # Try search filter by name, id, or sourceAssetId
+            filter_expr = urllib.parse.quote(f"(name='{voice_profile_id}' || id='{voice_profile_id}' || sourceAssetId='{voice_profile_id}')")
             query_url = f"http://localhost:8090/api/collections/voice_profiles/records?filter={filter_expr}"
             req2 = urllib.request.Request(query_url, headers={"User-Agent": "VoiceEngine"})
             try:
@@ -394,10 +406,21 @@ class XTTSv2Adapter(VoiceEngine):
                         items = query_data.get("items", [])
                         if items:
                             first_item = items[0]
-                            p_ref = first_item.get("primaryReferencePath") or (first_item.get("referenceAudioPaths") or [None])[0]
+                            p_ref = (
+                                first_item.get("primaryReferencePath")
+                                or first_item.get("referenceAudio")
+                                or (first_item.get("referenceAudioPaths") or [None])[0]
+                            )
                             if p_ref and os.path.exists(p_ref) and os.path.getsize(p_ref) > 1000:
-                                logger.info(f"[XTTSv2] Resolved from Solarch BaaS query: {p_ref}")
+                                logger.info(f"[XTTSv2] Resolved from Solarch BaaS query audio field: {p_ref}")
                                 return ReferenceAudioPreprocessor.get_clean_reference(p_ref)
+
+                            src_asset = first_item.get("sourceAssetId") or first_item.get("voiceProfileId")
+                            if src_asset:
+                                asset_ref = os.path.join(os.getcwd(), "storage", "voice_profiles", src_asset, "reference.wav")
+                                if os.path.exists(asset_ref) and os.path.getsize(asset_ref) > 1000:
+                                    logger.info(f"[XTTSv2] Resolved from Solarch query sourceAssetId storage: {asset_ref}")
+                                    return ReferenceAudioPreprocessor.get_clean_reference(asset_ref)
             except Exception:
                 pass
         except Exception as solarch_err:
