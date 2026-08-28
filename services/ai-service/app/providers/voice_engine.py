@@ -278,13 +278,44 @@ class XTTSv2Adapter(VoiceEngine):
             # Normalize language code
             lang = self._normalize_language(req.language)
 
-            # Run actual XTTS v2 inference with the resolved reference audio
+            # Phase 13D Prosody & Naturalness Optimization:
+            # - temperature: 0.80 (0.85 for energetic/expressive, 0.78 for calm) provides natural pitch dynamics without hallucinations
+            # - repetition_penalty: 5.0 (reduced from 10.0 to prevent rigid/monotone phonetic transitions)
+            # - top_p: 0.88 for natural vowel articulation and cadence
+            # - length_penalty: 1.05 for natural clause durations
+            # - split_sentences: False for coherent single/multi-clause sentences to preserve prosody flow; True for very long scripts (>250 chars)
+            target_temperature = 0.80
+            target_rep_penalty = 5.0
+            target_top_p = 0.88
+
+            # Dynamic emotion-based prosody tuning if specified
+            if req.emotion:
+                em_lower = req.emotion.lower()
+                if "energetic" in em_lower or "expressive" in em_lower or "excited" in em_lower:
+                    target_temperature = 0.85
+                    target_rep_penalty = 4.5
+                elif "calm" in em_lower or "peaceful" in em_lower:
+                    target_temperature = 0.78
+                    target_rep_penalty = 6.0
+                elif "neutral" in em_lower:
+                    target_temperature = 0.80
+
+            # Determine optimal sentence splitting strategy for prosodic cohesion
+            use_split = len(req.text) > 250
+
+            # Run actual XTTS v2 inference with the resolved reference audio and optimized prosody
             self._tts.tts_to_file(
                 text=req.text,
                 speaker_wav=reference_audio,
                 language=lang,
                 file_path=output_path,
-                speed=req.speed
+                speed=req.speed,
+                split_sentences=use_split,
+                temperature=target_temperature,
+                length_penalty=1.05,
+                repetition_penalty=target_rep_penalty,
+                top_k=50,
+                top_p=target_top_p
             )
 
             # Verify output file exists and contains real audio
