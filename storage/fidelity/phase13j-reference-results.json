@@ -1,0 +1,393 @@
+{
+  "metadata": {
+    "phase": "13J",
+    "date": "2026-09-09 18:07:34",
+    "voice_target": "chocho (alias: aadi)",
+    "hardware": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "model": "xtts-v2",
+    "target_duration_range": "15s - 60s"
+  },
+  "canonical_benchmark": {
+    "V1_Single_Baseline": {
+      "name": "Chocho V1 (Single Canonical Ref)",
+      "ref_count": 1,
+      "total_ref_duration": 8.21,
+      "similarity": 78.05,
+      "mfcc_similarity": 0.986,
+      "f0_std": 41.42406111891749,
+      "duration": 6.262,
+      "latency": 6.05,
+      "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+    },
+    "V2_Historical_Multi": {
+      "name": "Chocho V2 (Historical 5-Ref with degraded 2s clip)",
+      "ref_count": 5,
+      "total_ref_duration": 30.72,
+      "similarity": 78.46,
+      "mfcc_similarity": 0.993,
+      "f0_std": 34.016087864529084,
+      "duration": 8.31,
+      "latency": 4.62,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "V3_A_Best_Single": {
+      "name": "Chocho V3-A (Best Single VAD Reference)",
+      "ref_count": 1,
+      "total_ref_duration": 8.21,
+      "similarity": 79.95,
+      "mfcc_similarity": 0.9901,
+      "f0_std": 51.36993827272976,
+      "duration": 9.462,
+      "latency": 5.0,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "V3_B_Best_2Ref": {
+      "name": "Chocho V3-B (Best 2 References)",
+      "ref_count": 2,
+      "total_ref_duration": 16.42,
+      "similarity": 79.93,
+      "mfcc_similarity": 0.9904,
+      "f0_std": 39.9504763867821,
+      "duration": 6.304666666666667,
+      "latency": 3.17,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "V3_C_Best_3Ref": {
+      "name": "Chocho V3-C (Best 3 References)",
+      "ref_count": 3,
+      "total_ref_duration": 24.22,
+      "similarity": 79.15,
+      "mfcc_similarity": 0.9794,
+      "f0_std": 44.42920827586401,
+      "duration": 5.8886666666666665,
+      "latency": 3.29,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "V3_D_Best_4Ref": {
+      "name": "Chocho V3-D (Best 4 References)",
+      "ref_count": 4,
+      "total_ref_duration": 31.22,
+      "similarity": 78.75,
+      "mfcc_similarity": 0.9907,
+      "f0_std": 51.82390208364211,
+      "duration": 5.8886666666666665,
+      "latency": 3.03,
+      "transcription": "Welcome to the Voice A.I. Studio, where a neural speech synthesis brings natural voices to life."
+    },
+    "V3_E_Best_5Ref": {
+      "name": "Chocho V3-E (Studio 5 References, All >95% Consistent)",
+      "ref_count": 5,
+      "total_ref_duration": 37.52,
+      "similarity": 77.84,
+      "mfcc_similarity": 0.9796,
+      "f0_std": 50.21631233296587,
+      "duration": 6.678,
+      "latency": 3.63,
+      "transcription": "Welcome to the Voice AI Studio. Where Norell's speech synthesis brings natural voices to life."
+    }
+  },
+  "multi_text_benchmark": {
+    "V1_Single_Baseline": [
+      {
+        "id": "text_01_statement",
+        "type": "Statement",
+        "similarity": 76.7,
+        "mfcc_similarity": 0.9846,
+        "f0_std": 30.589702888635138,
+        "latency": 2.76,
+        "transcription": "Advanced artificial intelligence is transforming modern voice technology."
+      },
+      {
+        "id": "text_02_question",
+        "type": "Question",
+        "similarity": 76.1,
+        "mfcc_similarity": 0.9866,
+        "f0_std": 45.03138065717464,
+        "latency": 1.93,
+        "transcription": "Could you please tell me how long this journey will take?"
+      },
+      {
+        "id": "text_03_conversational",
+        "type": "Conversational",
+        "similarity": 74.77,
+        "mfcc_similarity": 0.9854,
+        "f0_std": 66.73267541747889,
+        "latency": 2.52,
+        "transcription": "Yeah, that sounds like a great plan. Let's definitely catch up tomorrow morning."
+      },
+      {
+        "id": "text_04_explanatory",
+        "type": "Explanatory",
+        "similarity": 79.02,
+        "mfcc_similarity": 0.9925,
+        "f0_std": 34.30703209025016,
+        "latency": 3.95,
+        "transcription": "Machine learning models analyze acoustic features such as pitch, calmer, and cadence to replicate speech."
+      },
+      {
+        "id": "text_05_long",
+        "type": "Long Sentence",
+        "similarity": 78.65,
+        "mfcc_similarity": 0.9853,
+        "f0_std": 37.980811208018686,
+        "latency": 7.81,
+        "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+      },
+      {
+        "id": "text_06_comma_heavy",
+        "type": "Comma-Heavy",
+        "similarity": 78.34,
+        "mfcc_similarity": 0.9891,
+        "f0_std": 48.06101598637895,
+        "latency": 7.18,
+        "transcription": "First, prepare the data set, clean the noisy recordings, verify the speaker identity, and then run the training pipeline."
+      },
+      {
+        "id": "text_07_calm",
+        "type": "Calm",
+        "similarity": 76.64,
+        "mfcc_similarity": 0.9876,
+        "f0_std": 61.59563333294408,
+        "latency": 7.91,
+        "transcription": "Take a slow deep breath, listen to the gentle sound of rain outside and relax your mind."
+      },
+      {
+        "id": "text_08_energetic",
+        "type": "Energetic",
+        "similarity": 73.1,
+        "mfcc_similarity": 0.9786,
+        "f0_std": 62.65194834320379,
+        "latency": 2.91,
+        "transcription": "Look at that incredible performance, we actually won the championship match today."
+      },
+      {
+        "id": "text_09_emotional",
+        "type": "Emotional",
+        "similarity": 80.05,
+        "mfcc_similarity": 0.99,
+        "f0_std": 24.615161759500946,
+        "latency": 5.37,
+        "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+      },
+      {
+        "id": "text_10_dialogue",
+        "type": "Dialogue",
+        "similarity": 76.55,
+        "mfcc_similarity": 0.9823,
+        "f0_std": 44.025253761191856,
+        "latency": 5.39,
+        "transcription": "Quit you double check those numbers before we finalize the budget. Absolutely, I will do that right now."
+      }
+    ],
+    "V2_Historical_Multi": [
+      {
+        "id": "text_01_statement",
+        "type": "Statement",
+        "similarity": 78.49,
+        "mfcc_similarity": 0.9922,
+        "f0_std": 38.94412748813373,
+        "latency": 3.61,
+        "transcription": "Advanced artificial intelligence is transforming modern voice technology."
+      },
+      {
+        "id": "text_02_question",
+        "type": "Question",
+        "similarity": 77.89,
+        "mfcc_similarity": 0.9871,
+        "f0_std": 27.627428544008307,
+        "latency": 2.35,
+        "transcription": "Could you please tell me how long this journey will take?"
+      },
+      {
+        "id": "text_03_conversational",
+        "type": "Conversational",
+        "similarity": 74.08,
+        "mfcc_similarity": 0.9946,
+        "f0_std": 32.460744402401296,
+        "latency": 2.89,
+        "transcription": "Yeah, that sounds like a great plan. Let us definitely catch up tomorrow morning."
+      },
+      {
+        "id": "text_04_explanatory",
+        "type": "Explanatory",
+        "similarity": 77.34,
+        "mfcc_similarity": 0.9948,
+        "f0_std": 33.41492900966764,
+        "latency": 5.03,
+        "transcription": "Machine Learning Models Analyze Acoustic Features, such as pitch, timbre, and cadence to replicate speech."
+      },
+      {
+        "id": "text_05_long",
+        "type": "Long Sentence",
+        "similarity": 78.92,
+        "mfcc_similarity": 0.9881,
+        "f0_std": 48.994031073502114,
+        "latency": 7.69,
+        "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+      },
+      {
+        "id": "text_06_comma_heavy",
+        "type": "Comma-Heavy",
+        "similarity": 73.64,
+        "mfcc_similarity": 0.9863,
+        "f0_std": 60.54850683881925,
+        "latency": 8.01,
+        "transcription": "First, prepare the dataset, clean the noisy recordings, verify the speaker identity, and then run the training pipeline."
+      },
+      {
+        "id": "text_07_calm",
+        "type": "Calm",
+        "similarity": 78.66,
+        "mfcc_similarity": 0.9934,
+        "f0_std": 35.61963675955977,
+        "latency": 8.24,
+        "transcription": "Take a slow deep breath, listen to the gentle sound of rain outside and relax your mind."
+      },
+      {
+        "id": "text_08_energetic",
+        "type": "Energetic",
+        "similarity": 76.96,
+        "mfcc_similarity": 0.9895,
+        "f0_std": 54.463285880251355,
+        "latency": 4.53,
+        "transcription": "Look at that incredible performance. We actually won the championship match today."
+      },
+      {
+        "id": "text_09_emotional",
+        "type": "Emotional",
+        "similarity": 78.29,
+        "mfcc_similarity": 0.9841,
+        "f0_std": 21.898298710617237,
+        "latency": 5.82,
+        "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+      },
+      {
+        "id": "text_10_dialogue",
+        "type": "Dialogue",
+        "similarity": 76.0,
+        "mfcc_similarity": 0.9897,
+        "f0_std": 54.473640757839725,
+        "latency": 5.8,
+        "transcription": "Could you double check those numbers before we finalize the budget? Absolutely, I will do that right now."
+      }
+    ],
+    "V3_E_Best_5Ref": [
+      {
+        "id": "text_01_statement",
+        "type": "Statement",
+        "similarity": 80.54,
+        "mfcc_similarity": 0.9877,
+        "f0_std": 31.78258846458349,
+        "latency": 3.74,
+        "transcription": "Advanced artificial intelligence is transforming modern voice technology."
+      },
+      {
+        "id": "text_02_question",
+        "type": "Question",
+        "similarity": 79.47,
+        "mfcc_similarity": 0.9942,
+        "f0_std": 51.99989947923913,
+        "latency": 2.08,
+        "transcription": "Go with a few uses, tell me how long this journey will take."
+      },
+      {
+        "id": "text_03_conversational",
+        "type": "Conversational",
+        "similarity": 77.84,
+        "mfcc_similarity": 0.9913,
+        "f0_std": 35.29750462468533,
+        "latency": 2.54,
+        "transcription": "Yeah, that sounds like a great plan, but it's definitely catch up tomorrow morning."
+      },
+      {
+        "id": "text_04_explanatory",
+        "type": "Explanatory",
+        "similarity": 80.13,
+        "mfcc_similarity": 0.9929,
+        "f0_std": 33.86662441029518,
+        "latency": 3.76,
+        "transcription": "Machine learning models analyze acoustic features such as pitch, timbre, and cadence to replicate speech."
+      },
+      {
+        "id": "text_05_long",
+        "type": "Long Sentence",
+        "similarity": 77.4,
+        "mfcc_similarity": 0.9856,
+        "f0_std": 29.718117694704304,
+        "latency": 7.87,
+        "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+      },
+      {
+        "id": "text_06_comma_heavy",
+        "type": "Comma-Heavy",
+        "similarity": 74.76,
+        "mfcc_similarity": 0.9951,
+        "f0_std": 40.611256744421475,
+        "latency": 7.59,
+        "transcription": "First, prepare the data set, clean the noisy recordings, verify the speaker identity, and then run the training pipeline."
+      },
+      {
+        "id": "text_07_calm",
+        "type": "Calm",
+        "similarity": 79.1,
+        "mfcc_similarity": 0.9945,
+        "f0_std": 49.60098524465157,
+        "latency": 7.03,
+        "transcription": "Take a Sloan deep breath, listen to the gentle sound of rain outside, and relax your mind. Let's dip."
+      },
+      {
+        "id": "text_08_energetic",
+        "type": "Energetic",
+        "similarity": 76.29,
+        "mfcc_similarity": 0.9948,
+        "f0_std": 39.6170361063068,
+        "latency": 5.64,
+        "transcription": "Look at that incredible performance. We actually won the championship match today."
+      },
+      {
+        "id": "text_09_emotional",
+        "type": "Emotional",
+        "similarity": 80.51,
+        "mfcc_similarity": 0.9905,
+        "f0_std": 38.82321454830406,
+        "latency": 5.93,
+        "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+      },
+      {
+        "id": "text_10_dialogue",
+        "type": "Dialogue",
+        "similarity": 79.14,
+        "mfcc_similarity": 0.994,
+        "f0_std": 66.30631343040406,
+        "latency": 7.8,
+        "transcription": "Could you double-check those numbers before we finalize the budget? Absolutely. I will do that right now."
+      }
+    ]
+  },
+  "comparison_summary": {
+    "V1_Single_Baseline": {
+      "mean_similarity": 76.99,
+      "std_similarity": 1.98,
+      "min_similarity": 73.1,
+      "max_similarity": 80.05,
+      "mean_f0_std": 45.6,
+      "mean_latency": 4.77
+    },
+    "V2_Historical_Multi": {
+      "mean_similarity": 77.03,
+      "std_similarity": 1.79,
+      "min_similarity": 73.64,
+      "max_similarity": 78.92,
+      "mean_f0_std": 40.8,
+      "mean_latency": 5.4
+    },
+    "V3_E_Best_5Ref": {
+      "mean_similarity": 78.52,
+      "std_similarity": 1.82,
+      "min_similarity": 74.76,
+      "max_similarity": 80.54,
+      "mean_f0_std": 41.8,
+      "mean_latency": 5.4
+    }
+  }
+}

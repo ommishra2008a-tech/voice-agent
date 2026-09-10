@@ -1,0 +1,778 @@
+{
+  "metadata": {
+    "phase": "13I",
+    "date": "2026-09-03 00:11:11",
+    "voice_target": "chocho (alias: aadi)",
+    "hardware": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "canonical_reference": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_raw_24k.wav",
+    "canonical_ref_sha256": "9432ac721c6bdc52b622dda80e3553ef9dbb1bf73bfff881e9b9edd242ee240d"
+  },
+  "experiments": {
+    "canonical_reference": {
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_raw_24k.wav",
+      "duration": 8.213333333333333,
+      "sample_rate": 24000,
+      "sha256": "9432ac721c6bdc52b622dda80e3553ef9dbb1bf73bfff881e9b9edd242ee240d",
+      "matches_expected": true
+    },
+    "parameter_mismatch": {
+      "C1_A_ProductionDefault": {
+        "config": {
+          "id": "C1_A_ProductionDefault",
+          "temp": 0.8,
+          "rep_pen": 5.0,
+          "top_p": 0.88,
+          "desc": "Current production code default"
+        },
+        "trials": [
+          {
+            "repetition": 1,
+            "file": "param_C1_A_ProductionDefault_rep1.wav",
+            "similarity": 79.18,
+            "mfcc_similarity": 0.9903,
+            "f0_std": 46.24962396526087,
+            "duration": 5.6113333333333335,
+            "gen_time": 9.47,
+            "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 2,
+            "file": "param_C1_A_ProductionDefault_rep2.wav",
+            "similarity": 77.28,
+            "mfcc_similarity": 0.9902,
+            "f0_std": 47.97322079078344,
+            "duration": 6.955333333333333,
+            "gen_time": 8.64,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 3,
+            "file": "param_C1_A_ProductionDefault_rep3.wav",
+            "similarity": 79.69,
+            "mfcc_similarity": 0.9927,
+            "f0_std": 37.7617371152958,
+            "duration": 10.539333333333333,
+            "gen_time": 13.02,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          }
+        ],
+        "mean_similarity": 78.72,
+        "std_similarity": 1.04,
+        "min_similarity": 77.28,
+        "max_similarity": 79.69
+      },
+      "C1_B_BestConfig": {
+        "config": {
+          "id": "C1_B_BestConfig",
+          "temp": 0.85,
+          "rep_pen": 7.0,
+          "top_p": 0.88,
+          "desc": "Stored best_config.json setting"
+        },
+        "trials": [
+          {
+            "repetition": 1,
+            "file": "param_C1_B_BestConfig_rep1.wav",
+            "similarity": 79.99,
+            "mfcc_similarity": 0.9938,
+            "f0_std": 52.73659229789971,
+            "duration": 8.395333333333333,
+            "gen_time": 10.11,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 2,
+            "file": "param_C1_B_BestConfig_rep2.wav",
+            "similarity": 78.98,
+            "mfcc_similarity": 0.9872,
+            "f0_std": 41.28130884777241,
+            "duration": 7.606,
+            "gen_time": 10.11,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 3,
+            "file": "param_C1_B_BestConfig_rep3.wav",
+            "similarity": 76.59,
+            "mfcc_similarity": 0.9866,
+            "f0_std": 41.09515516503157,
+            "duration": 7.147333333333333,
+            "gen_time": 8.85,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          }
+        ],
+        "mean_similarity": 78.52,
+        "std_similarity": 1.43,
+        "min_similarity": 76.59,
+        "max_similarity": 79.99
+      },
+      "C1_C_HighTemp_LowRep": {
+        "config": {
+          "id": "C1_C_HighTemp_LowRep",
+          "temp": 0.85,
+          "rep_pen": 5.0,
+          "top_p": 0.88,
+          "desc": "Isolated temperature increase"
+        },
+        "trials": [
+          {
+            "repetition": 1,
+            "file": "param_C1_C_HighTemp_LowRep_rep1.wav",
+            "similarity": 77.51,
+            "mfcc_similarity": 0.9886,
+            "f0_std": 53.36528986574459,
+            "duration": 7.051333333333333,
+            "gen_time": 7.46,
+            "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 2,
+            "file": "param_C1_C_HighTemp_LowRep_rep2.wav",
+            "similarity": 78.4,
+            "mfcc_similarity": 0.9873,
+            "f0_std": 44.149700922606655,
+            "duration": 7.328666666666667,
+            "gen_time": 9.23,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 3,
+            "file": "param_C1_C_HighTemp_LowRep_rep3.wav",
+            "similarity": 78.18,
+            "mfcc_similarity": 0.9929,
+            "f0_std": 27.792828135842665,
+            "duration": 8.960666666666667,
+            "gen_time": 10.11,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          }
+        ],
+        "mean_similarity": 78.03,
+        "std_similarity": 0.38,
+        "min_similarity": 77.51,
+        "max_similarity": 78.4
+      },
+      "C1_D_LowTemp_HighRep": {
+        "config": {
+          "id": "C1_D_LowTemp_HighRep",
+          "temp": 0.8,
+          "rep_pen": 7.0,
+          "top_p": 0.88,
+          "desc": "Isolated repetition penalty increase"
+        },
+        "trials": [
+          {
+            "repetition": 1,
+            "file": "param_C1_D_LowTemp_HighRep_rep1.wav",
+            "similarity": 77.59,
+            "mfcc_similarity": 0.9921,
+            "f0_std": 35.72923365731052,
+            "duration": 6.443333333333333,
+            "gen_time": 7.11,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 2,
+            "file": "param_C1_D_LowTemp_HighRep_rep2.wav",
+            "similarity": 78.47,
+            "mfcc_similarity": 0.9921,
+            "f0_std": 45.2388899925842,
+            "duration": 7.702,
+            "gen_time": 9.9,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          },
+          {
+            "repetition": 3,
+            "file": "param_C1_D_LowTemp_HighRep_rep3.wav",
+            "similarity": 78.65,
+            "mfcc_similarity": 0.9935,
+            "f0_std": 37.993272411287634,
+            "duration": 8.171333333333333,
+            "gen_time": 11.61,
+            "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+          }
+        ],
+        "mean_similarity": 78.24,
+        "std_similarity": 0.46,
+        "min_similarity": 77.59,
+        "max_similarity": 78.65
+      }
+    },
+    "reference_preprocessing": {
+      "Var_A_Raw24k": {
+        "variant": {
+          "id": "Var_A_Raw24k",
+          "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_raw_24k.wav",
+          "desc": "Pure raw 24kHz mono PCM"
+        },
+        "duration": 8.21,
+        "sha256": "9432ac721c6bdc52b622dda80e3553ef9dbb1bf73bfff881e9b9edd242ee240d",
+        "similarity": 76.97,
+        "mfcc_similarity": 0.9921,
+        "f0_std": 41.28669192830693,
+        "output_duration": 8.534,
+        "gen_time": 11.19,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "Var_B_CleanTrim": {
+        "variant": {
+          "id": "Var_B_CleanTrim",
+          "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13i\\ref_var_B_cleantrim.wav",
+          "desc": "Conservative trim of edge silences (0.2s-8.0s)"
+        },
+        "duration": 7.8,
+        "sha256": "aec7599d163183fbfb956d7161971620df6a18c0ca26c61a56ecf515fb34e355",
+        "similarity": 77.05,
+        "mfcc_similarity": 0.9943,
+        "f0_std": 38.56680327417534,
+        "output_duration": 8.395333333333333,
+        "gen_time": 12.33,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "Var_C_VADTrim": {
+        "variant": {
+          "id": "Var_C_VADTrim",
+          "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13i\\ref_var_C_vadtrim.wav",
+          "desc": "Conservative WebRTC VAD voice-active trimming"
+        },
+        "duration": 8.21,
+        "sha256": "b20656b973c98d23c7aff50e28bf30c8cd4faab3bd522eaddd09077d0b7ffa2c",
+        "similarity": 79.8,
+        "mfcc_similarity": 0.9911,
+        "f0_std": 62.97956952347172,
+        "output_duration": 9.142,
+        "gen_time": 12.17,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      },
+      "Var_D_ProductionRef": {
+        "variant": {
+          "id": "Var_D_ProductionRef",
+          "path": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho\\reference.wav",
+          "desc": "Current reference in storage/voice_profiles/chocho/"
+        },
+        "duration": 8.21,
+        "sha256": "9432ac721c6bdc52b622dda80e3553ef9dbb1bf73bfff881e9b9edd242ee240d",
+        "similarity": 74.64,
+        "mfcc_similarity": 0.9899,
+        "f0_std": 56.92646368353002,
+        "output_duration": 9.323333333333334,
+        "gen_time": 11.36,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      },
+      "Var_E_FormantEQ": {
+        "variant": {
+          "id": "Var_E_FormantEQ",
+          "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_var_f_eq.wav",
+          "desc": "Formant clarity boost at 2.5kHz"
+        },
+        "duration": 8.21,
+        "sha256": "eb020eebadb605d019d7595ec69288b7ad1ec06ab6a0845ec691b9636feb3924",
+        "similarity": 78.38,
+        "mfcc_similarity": 0.9865,
+        "f0_std": 59.18846239721317,
+        "output_duration": 8.63,
+        "gen_time": 12.2,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      }
+    },
+    "gpt_conditioning": {
+      "C2_A_Cond6_Chunk6": {
+        "config": {
+          "id": "C2_A_Cond6_Chunk6",
+          "gpt_cond_len": 6,
+          "gpt_cond_chunk_len": 6,
+          "max_ref_len": 10
+        },
+        "similarity": 80.56,
+        "mfcc_similarity": 0.9904,
+        "f0_std": 46.67611094162455,
+        "output_duration": 8.864,
+        "gen_time": 14.28,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "C2_B_Cond8_Chunk4": {
+        "config": {
+          "id": "C2_B_Cond8_Chunk4",
+          "gpt_cond_len": 8,
+          "gpt_cond_chunk_len": 4,
+          "max_ref_len": 10
+        },
+        "similarity": 78.85,
+        "mfcc_similarity": 0.9888,
+        "f0_std": 54.21101670221826,
+        "output_duration": 7.285333333333333,
+        "gen_time": 11.3,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "C2_C_Cond30_Chunk6": {
+        "config": {
+          "id": "C2_C_Cond30_Chunk6",
+          "gpt_cond_len": 30,
+          "gpt_cond_chunk_len": 6,
+          "max_ref_len": 30
+        },
+        "similarity": 81.05,
+        "mfcc_similarity": 0.988,
+        "f0_std": 64.08370173713267,
+        "output_duration": 6.592,
+        "gen_time": 10.42,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "C2_D_Cond30_Chunk4": {
+        "config": {
+          "id": "C2_D_Cond30_Chunk4",
+          "gpt_cond_len": 30,
+          "gpt_cond_chunk_len": 4,
+          "max_ref_len": 30
+        },
+        "similarity": 78.2,
+        "mfcc_similarity": 0.9853,
+        "f0_std": 46.19900221781029,
+        "output_duration": 7.285333333333333,
+        "gen_time": 11.05,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life. Waiiii!"
+      }
+    },
+    "multiref_benchmark": {
+      "items": {
+        "single_reference": [
+          {
+            "id": "text_01_greeting",
+            "type": "Greeting",
+            "similarity": 74.98,
+            "latency": 7.99,
+            "f0_std": 47.686392043664966,
+            "transcription": "Good afternoon, I am delighted to welcome you to our Voice Intelligence platform."
+          },
+          {
+            "id": "text_02_explanatory",
+            "type": "Technical",
+            "similarity": 79.88,
+            "latency": 13.4,
+            "f0_std": 46.628060164840576,
+            "transcription": "Machine learning models analyze acoustic features such as pitch, timbre, and cadence to replicate speech."
+          },
+          {
+            "id": "text_03_question",
+            "type": "Question",
+            "similarity": 78.18,
+            "latency": 7.35,
+            "f0_std": 34.301147321481565,
+            "transcription": "Would you prefer to schedule our follow-up meeting for Thursday afternoon or Friday morning?"
+          },
+          {
+            "id": "text_04_narrative",
+            "type": "Narrative",
+            "similarity": 76.73,
+            "latency": 9.24,
+            "f0_std": 48.94592435124452,
+            "transcription": "As the autumn sun did below the horizon, long shadows stretched quietly across the tranquil valley."
+          },
+          {
+            "id": "text_05_instruction",
+            "type": "Instructional",
+            "similarity": 75.42,
+            "latency": 12.43,
+            "f0_std": 34.06132555693536,
+            "transcription": "Please verify that your microphone is plugged in, adjust the input volume and press the record button."
+          },
+          {
+            "id": "text_06_conversational",
+            "type": "Conversational",
+            "similarity": 80.54,
+            "latency": 9.32,
+            "f0_std": 44.34586433663354,
+            "transcription": "Honestly, I think that approach makes complete sense. So, let us give it a try next week."
+          },
+          {
+            "id": "text_07_empathy",
+            "type": "Empathetic",
+            "similarity": 76.02,
+            "latency": 10.1,
+            "f0_std": 53.6252254589867,
+            "transcription": "I completely understand how difficult this situation has been for you and we are here to help."
+          },
+          {
+            "id": "text_08_enthusiasm",
+            "type": "Enthusiastic",
+            "similarity": 71.53,
+            "latency": 7.16,
+            "f0_std": 38.0821648797265,
+            "transcription": "That was an outstanding presentation, and the entire team was truly impressed by your results."
+          },
+          {
+            "id": "text_09_multiclause",
+            "type": "Multi-Clause",
+            "similarity": 81.19,
+            "latency": 10.67,
+            "f0_std": 44.487897357666135,
+            "transcription": "Even though the delivery was delayed by adverse weather, the customer service department handled the inquiry with great care."
+          },
+          {
+            "id": "text_10_dialogue",
+            "type": "Dialogue",
+            "similarity": 75.44,
+            "latency": 6.52,
+            "f0_std": 36.4799980565541,
+            "transcription": "Could you double check those numbers before we finalize the budget? Absolutely. I will do that right now."
+          }
+        ],
+        "multi_reference": [
+          {
+            "id": "text_01_greeting",
+            "type": "Greeting",
+            "similarity": 77.56,
+            "latency": 6.84,
+            "f0_std": 32.73076063637961,
+            "transcription": "Good afternoon, I am delighted to welcome you to our voice intelligence platform.",
+            "delta": 2.58
+          },
+          {
+            "id": "text_02_explanatory",
+            "type": "Technical",
+            "similarity": 79.28,
+            "latency": 11.85,
+            "f0_std": 42.828564292607105,
+            "transcription": "Machine learning models analyze acoustic features such as pitch, timbre, and cadence to replicate speech.",
+            "delta": -0.6
+          },
+          {
+            "id": "text_03_question",
+            "type": "Question",
+            "similarity": 79.27,
+            "latency": 8.9,
+            "f0_std": 31.662970089007285,
+            "transcription": "Would you prefer to schedule our follow-up meeting for Thursday afternoon or Friday morning?",
+            "delta": 1.09
+          },
+          {
+            "id": "text_04_narrative",
+            "type": "Narrative",
+            "similarity": 76.61,
+            "latency": 11.49,
+            "f0_std": 50.34705662066234,
+            "transcription": "As the autumn sun dip below the horizon, long shadows stretch quietly across the tranquil valley.",
+            "delta": -0.12
+          },
+          {
+            "id": "text_05_instruction",
+            "type": "Instructional",
+            "similarity": 79.39,
+            "latency": 8.85,
+            "f0_std": 33.47996411411765,
+            "transcription": "Please verify that your microphone is plugged in. Adjust the input volume and press the record button.",
+            "delta": 3.97
+          },
+          {
+            "id": "text_06_conversational",
+            "type": "Conversational",
+            "similarity": 76.37,
+            "latency": 7.25,
+            "f0_std": 50.51154924341144,
+            "transcription": "Honestly, I think that approach makes complete sense, so let us give it a try next week.",
+            "delta": -4.17
+          },
+          {
+            "id": "text_07_empathy",
+            "type": "Empathetic",
+            "similarity": 79.37,
+            "latency": 10.55,
+            "f0_std": 32.57423085195518,
+            "transcription": "I completely understand how difficult this situation has been for you, and we are here to help.",
+            "delta": 3.35
+          },
+          {
+            "id": "text_08_enthusiasm",
+            "type": "Enthusiastic",
+            "similarity": 78.93,
+            "latency": 11.61,
+            "f0_std": 56.06025426515695,
+            "transcription": "That was an outstanding presentation, and the entire team was truly impressed by your results.",
+            "delta": 7.4
+          },
+          {
+            "id": "text_09_multiclause",
+            "type": "Multi-Clause",
+            "similarity": 78.27,
+            "latency": 11.32,
+            "f0_std": 54.27290066161118,
+            "transcription": "Even though the delivery was delayed by adverse weather, the customer service department handled the inquiry with great care.",
+            "delta": -2.92
+          },
+          {
+            "id": "text_10_dialogue",
+            "type": "Dialogue",
+            "similarity": 77.08,
+            "latency": 9.12,
+            "f0_std": 50.02917712887381,
+            "transcription": "Could you double check those numbers before we finalize the budget? Absolutely, I will do that right now.",
+            "delta": 1.64
+          }
+        ]
+      },
+      "summary": {
+        "single_ref_mean": 76.99,
+        "single_ref_min": 71.53,
+        "single_ref_max": 81.19,
+        "single_ref_std": 2.82,
+        "multi_ref_mean": 78.21,
+        "multi_ref_min": 76.37,
+        "multi_ref_max": 79.39,
+        "multi_ref_std": 1.15,
+        "net_mean_gain": 1.22
+      }
+    },
+    "stochastic_variance": {
+      "runs": [
+        {
+          "run": 1,
+          "similarity": 80.18,
+          "mfcc_similarity": 0.9918,
+          "f0_std": 46.438051940642,
+          "duration": 8.171333333333333,
+          "latency": 9.99,
+          "composite_score": 85.88
+        },
+        {
+          "run": 2,
+          "similarity": 78.98,
+          "mfcc_similarity": 0.9899,
+          "f0_std": 43.69430806533749,
+          "duration": 7.328666666666667,
+          "latency": 8.79,
+          "composite_score": 84.98
+        },
+        {
+          "run": 3,
+          "similarity": 79.02,
+          "mfcc_similarity": 0.9875,
+          "f0_std": 72.99365192365188,
+          "duration": 8.31,
+          "latency": 11.59,
+          "composite_score": 84.94
+        },
+        {
+          "run": 4,
+          "similarity": 80.27,
+          "mfcc_similarity": 0.9819,
+          "f0_std": 43.70119563080237,
+          "duration": 6.027333333333333,
+          "latency": 8.83,
+          "composite_score": 85.65
+        },
+        {
+          "run": 5,
+          "similarity": 79.07,
+          "mfcc_similarity": 0.988,
+          "f0_std": 40.2038582259644,
+          "duration": 7.744666666666666,
+          "latency": 9.26,
+          "composite_score": 84.99
+        },
+        {
+          "run": 6,
+          "similarity": 77.1,
+          "mfcc_similarity": 0.981,
+          "f0_std": 60.461901011498796,
+          "duration": 8.822,
+          "latency": 16.34
+        },
+        {
+          "run": 7,
+          "similarity": 80.27,
+          "mfcc_similarity": 0.9934,
+          "f0_std": 40.025298134307626,
+          "duration": 8.448666666666666,
+          "latency": 10.24
+        },
+        {
+          "run": 8,
+          "similarity": 80.32,
+          "mfcc_similarity": 0.9873,
+          "f0_std": 45.40305603425131,
+          "duration": 5.984666666666667,
+          "latency": 7.76
+        },
+        {
+          "run": 9,
+          "similarity": 77.47,
+          "mfcc_similarity": 0.9821,
+          "f0_std": 59.55136582212435,
+          "duration": 5.654,
+          "latency": 7.59
+        },
+        {
+          "run": 10,
+          "similarity": 80.41,
+          "mfcc_similarity": 0.9907,
+          "f0_std": 38.141596573924005,
+          "duration": 7.424666666666667,
+          "latency": 11.17
+        }
+      ],
+      "mean_similarity": 79.31,
+      "std_similarity": 1.16,
+      "min_similarity": 77.1,
+      "max_similarity": 80.41,
+      "range": 3.31,
+      "ci_95": 0.72,
+      "ci_lower": 78.59,
+      "ci_upper": 80.03
+    },
+    "best_of_n": {
+      "N1_similarity": 80.18,
+      "N3_similarity": 80.18,
+      "N5_similarity": 80.18,
+      "gain_N3_over_N1": 0.0,
+      "gain_N5_over_N1": 0.0,
+      "latency_multiplier_N3": 3.0,
+      "latency_multiplier_N5": 5.0,
+      "production_recommendation": "DO NOT make Best-of-N default due to 3x-5x latency penalty on RTX 3050. Keep as optional high-fidelity studio export mode."
+    },
+    "self_similarity_ceiling": {
+      "text": "Hello, I am Caluvaira. I will meet you.",
+      "similarity_percent": 76.69,
+      "mfcc_similarity": 0.9921,
+      "f0_mean_delta_hz": 21.96,
+      "gen_time": 5.25,
+      "transcription": "Hello, I am Caluvera. I'll meet you.",
+      "finding": "Self-similarity with matching reference text reaches 76.69%. Demonstrates that phonetic match to reference provides an inherent +3% to +5% alignment advantage over foreign text."
+    },
+    "phonetic_coverage": {
+      "reference_text": "Hello, I am Caluvaira. I will meet you.",
+      "word_count": 8,
+      "duration_sec": 8.21,
+      "speaking_rate_wps": 0.97,
+      "estimated_formants_hz": {
+        "F1": 262.9,
+        "F2": 1042.8,
+        "F3": 3181.4
+      },
+      "vowels_present": [
+        "/e/",
+        "/o\u028a/",
+        "/a\u026a/",
+        "/\u00e6/",
+        "/u\u02d0/",
+        "/i\u02d0/",
+        "/\u026a/"
+      ],
+      "consonants_present": [
+        "/h/",
+        "/l/",
+        "/m/",
+        "/k/",
+        "/v/",
+        "/r/",
+        "/w/",
+        "/t/",
+        "/j/"
+      ],
+      "missing_phoneme_categories": [
+        "Voiceless fricatives (/s/, /\u0283/, /\u03b8/, /f/ are sparse or absent)",
+        "Affricates (/t\u0283/, /d\u0292/ completely absent)",
+        "Nasals (/\u014b/ absent)"
+      ],
+      "bottleneck_finding": "The 8.21s reference contains only ~16 distinct phonemes out of ~44 English phonemes (36% phonetic coverage). When XTTS synthesizes sentences with sibilants, affricates, or unvoiced fricatives, it has zero reference conditioning data for those vocal tract configurations and must interpolate from training priors."
+    },
+    "local_candidates": {
+      "count": 8,
+      "candidates": [
+        {
+          "file": "storage\\ab_listening\\phase13h\\pair_01_statement_B_multiref.wav",
+          "duration_sec": 6.87,
+          "sample_rate": 24000,
+          "sha256": "8305c54b9324607d..."
+        },
+        {
+          "file": "storage\\ab_listening\\phase13h\\pair_02_conversational_B_multiref.wav",
+          "duration_sec": 5.94,
+          "sample_rate": 24000,
+          "sha256": "72a047beacefc810..."
+        },
+        {
+          "file": "storage\\ab_listening\\phase13h\\pair_03_emotional_B_multiref.wav",
+          "duration_sec": 8.49,
+          "sample_rate": 24000,
+          "sha256": "a9fe3be0132f43aa..."
+        },
+        {
+          "file": "storage\\backups\\phase13i_pre_backup_20260902_235837\\storage\\voice_profiles\\chocho\\reference.wav",
+          "duration_sec": 8.21,
+          "sample_rate": 24000,
+          "sha256": "318bdc9a08f8d53d..."
+        },
+        {
+          "file": "storage\\voice_profiles\\aadi\\reference.wav",
+          "duration_sec": 8.21,
+          "sample_rate": 24000,
+          "sha256": "318bdc9a08f8d53d..."
+        },
+        {
+          "file": "storage\\voice_profiles\\chocho\\reference.wav",
+          "duration_sec": 8.21,
+          "sample_rate": 24000,
+          "sha256": "9432ac721c6bdc52..."
+        },
+        {
+          "file": "tests\\fidelity-optimization\\phase13h\\canonical_REF_A_Single_Canonical.wav",
+          "duration_sec": 7.7,
+          "sample_rate": 24000,
+          "sha256": "636f61e97dd90ba4..."
+        },
+        {
+          "file": "tests\\fidelity-optimization\\phase13h\\canonical_REF_B_Single_BestSegment.wav",
+          "duration_sec": 8.35,
+          "sample_rate": 24000,
+          "sha256": "92679c131b1de5c3..."
+        }
+      ]
+    },
+    "audits": {
+      "post_processing": {
+        "raw_similarity": 77.69,
+        "raw_mfcc_similarity": 0.9887,
+        "raw_spectral_centroid": 2861.867323247585,
+        "finding": "In Phase 13F/G, destructive silenceremove and loudnorm were removed. The current pipeline passes pure 24kHz audio through format-only validation, resulting in ZERO post-processing degradation."
+      },
+      "text_normalization": {
+        "input_text": "Hello! Let's verify: does user text get altered (e.g., numbers like 100%, punctuation, quotes)?",
+        "received_by_xtts": "Hello! Let's verify: does user text get altered (e.g., numbers like 100%, punctuation, quotes)?",
+        "normalization_status": "PASS_THROUGH",
+        "finding": "XTTS tokenizer handles punctuation and characters natively. No regex or stripping mutates user text."
+      },
+      "language": {
+        "input_language": "en",
+        "normalized_language": "en",
+        "supported_by_xtts": true,
+        "finding": "Normalized language code 'en' is strictly verified against xtts_model.config.languages."
+      }
+    },
+    "cache_isolation": {
+      "refA_run1_sim": 75.54,
+      "refB_run_sim": 64.23,
+      "refA_run2_sim": 70.9,
+      "isolation_verified": true,
+      "finding": "Switching references dynamically produces correct respective speaker similarity (A1: 75.54%, B: 64.23%, A2: 70.9%). No stale latents cross-contaminate synthesis."
+    }
+  },
+  "ab_listening_package": [
+    {
+      "pair_id": "pair_01_normal_statement",
+      "text": "Advanced artificial intelligence is transforming modern voice technology.",
+      "baseline": "storage\\ab_listening\\phase13i\\pair_01_statement_A_baseline.wav",
+      "optimized": "storage\\ab_listening\\phase13i\\pair_01_statement_B_optimized.wav"
+    },
+    {
+      "pair_id": "pair_02_conversational",
+      "text": "Yeah, that sounds like a great plan, let's definitely catch up tomorrow morning.",
+      "baseline": "storage\\ab_listening\\phase13i\\pair_02_conversational_A_baseline.wav",
+      "optimized": "storage\\ab_listening\\phase13i\\pair_02_conversational_B_optimized.wav"
+    },
+    {
+      "pair_id": "pair_03_emotional",
+      "text": "I cannot express how deeply grateful I am for all your kindness and unwavering support.",
+      "baseline": "storage\\ab_listening\\phase13i\\pair_03_emotional_A_baseline.wav",
+      "optimized": "storage\\ab_listening\\phase13i\\pair_03_emotional_B_optimized.wav"
+    }
+  ]
+}

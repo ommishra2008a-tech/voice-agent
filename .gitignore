@@ -13,6 +13,7 @@ coverage/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Python
 __pycache__/
@@ -58,10 +59,15 @@ pb_data/
 !**/storage/voices/.gitkeep
 **/storage/voice_profiles/*
 !**/storage/voice_profiles/.gitkeep
+!**/storage/voice_profiles/aadi/**
+!**/storage/voice_profiles/chocho/**
+!**/storage/voice_profiles/chocho_v2/**
+!**/storage/voice_profiles/chocho_v3/**
 **/storage/cache/*
 !**/storage/cache/.gitkeep
 **/storage/models/*
 !**/storage/models/.gitkeep
+**/storage/fidelity/*.wav
 **/uploads/*
 !**/uploads/.gitkeep
 

@@ -1,0 +1,52 @@
+    def tts(
+        self,
+        text: str,
+        speaker: str = None,
+        language: str = None,
+        speaker_wav: str = None,
+        emotion: str = None,
+        speed: float = None,
+        split_sentences: bool = True,
+        **kwargs,
+    ):
+        """Convert text to speech.
+
+        Args:
+            text (str):
+                Input text to synthesize.
+            speaker (str, optional):
+                Speaker name for multi-speaker. You can check whether loaded model is multi-speaker by
+                `tts.is_multi_speaker` and list speakers by `tts.speakers`. Defaults to None.
+            language (str): Language of the text. If None, the default language of the speaker is used. Language is only
+                supported by `XTTS` model.
+            speaker_wav (str, optional):
+                Path to a reference wav file to use for voice cloning with supporting models like YourTTS.
+                Defaults to None.
+            emotion (str, optional):
+                Emotion to use for 🐸Coqui Studio models. If None, Studio models use "Neutral". Defaults to None.
+            speed (float, optional):
+                Speed factor to use for 🐸Coqui Studio models, between 0 and 2.0. If None, Studio models use 1.0.
+                Defaults to None.
+            split_sentences (bool, optional):
+                Split text into sentences, synthesize them separately and concatenate the file audio.
+                Setting it False uses more VRAM and possibly hit model specific text length or VRAM limits. Only
+                applicable to the 🐸TTS models. Defaults to True.
+            kwargs (dict, optional):
+                Additional arguments for the model.
+        """
+        self._check_arguments(
+            speaker=speaker, language=language, speaker_wav=speaker_wav, emotion=emotion, speed=speed, **kwargs
+        )
+        wav = self.synthesizer.tts(
+            text=text,
+            speaker_name=speaker,
+            language_name=language,
+            speaker_wav=speaker_wav,
+            reference_wav=None,
+            style_wav=None,
+            style_text=None,
+            reference_speaker_name=None,
+            split_sentences=split_sentences,
+            **kwargs,
+        )
+        return wav

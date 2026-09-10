@@ -28,7 +28,8 @@ import {
   IconMessageSquare,
   IconClock,
   IconTrash,
-  IconEdit
+  IconEdit,
+  IconZap
 } from "./Icons";
 
 export type StudioChatMode = "chat" | "translate" | "dubbing";
@@ -58,6 +59,7 @@ interface VoiceChatStudioProps {
   onAudioPlaybackState?: (isPlaying: boolean, audioEl?: HTMLAudioElement | null, currentVolume?: number, isMuted?: boolean) => void;
   onVolumeChange?: (volume: number, isMuted: boolean) => void;
   onOpenVoiceProfileLab?: () => void;
+  onOpenBenchmarkLab?: () => void;
 }
 
 interface VoiceAnalysisResult {
@@ -170,7 +172,8 @@ export default function VoiceChatStudio({
   sceneProps,
   onAudioPlaybackState,
   onVolumeChange,
-  onOpenVoiceProfileLab
+  onOpenVoiceProfileLab,
+  onOpenBenchmarkLab
 }: VoiceChatStudioProps) {
   const [profiles, setProfiles] = useState<VoiceProfileRecord[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<VoiceProfileRecord | null>(null);
@@ -2407,12 +2410,25 @@ export default function VoiceChatStudio({
                     onChange={(e) => setModel(e.target.value)}
                     className="bg-transparent text-[11px] text-white font-bold focus:outline-none cursor-pointer"
                   >
-                    <option value="xtts-v2" className="bg-[#0b142c] text-white">XTTS v2 (Coqui | Zero-Shot Cloner)</option>
-                    <option value="fastpitch-baseline" className="bg-[#0b142c] text-white">FastPitch (NVIDIA/LJSpeech | Baseline)</option>
-                    <option value="openvoice-v2" className="bg-[#0b142c] text-white">OpenVoice v2 (MyShell | Tone Color Transfer)</option>
-                    <option value="cosyvoice" className="bg-[#0b142c] text-white">CosyVoice (Alibaba | In-Context Multilingual)</option>
+                    <option value="xtts-v2" className="bg-[#0b142c] text-white">XTTS v2 (Coqui | Zero-Shot Cloner) — READY</option>
+                    <option value="fastpitch-baseline" className="bg-[#0b142c] text-white">FastPitch (LJSpeech | Baseline Single-Speaker - No Cloning) — READY</option>
+                    <option value="openvoice-v2" className="bg-[#0b142c] text-slate-400">OpenVoice v2 (Tone Color | Unavailable - Not Installed)</option>
+                    <option value="cosyvoice" className="bg-[#0b142c] text-slate-400">CosyVoice (In-Context | Unavailable - Not Installed)</option>
                   </select>
                 </div>
+
+                {/* Voice Fidelity & Improvement Metrics Trigger */}
+                {onOpenBenchmarkLab && (
+                  <button
+                    type="button"
+                    onClick={onOpenBenchmarkLab}
+                    className="flex items-center gap-1.5 bg-[#0b142c] hover:bg-[#152347] border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 rounded-xl px-2.5 py-1 text-[11px] font-bold transition-all shadow"
+                    title="View Empirical Voice Fidelity & Model Improvement Metrics"
+                  >
+                    <IconZap className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Metrics</span>
+                  </button>
+                )}
 
                 {/* Language Selector */}
                 <div className="flex items-center gap-1 bg-[#0b142c] border border-[#1e293b] rounded-xl px-2 py-1">

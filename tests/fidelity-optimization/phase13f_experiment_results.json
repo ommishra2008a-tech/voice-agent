@@ -1,0 +1,487 @@
+{
+  "metadata": {
+    "phase": "13F",
+    "date": "2026-08-30",
+    "voice_target": "chocho (alias: aadi)",
+    "gpu": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "reference_file": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_raw_24k.wav",
+    "reference_duration": 8.213333333333333,
+    "reference_hash": "9432ac721c6bdc52b622dda80e3553ef9dbb1bf73bfff881e9b9edd242ee240d"
+  },
+  "experiments": {
+    "reference_preprocessing": {
+      "Var_A_Raw_24k": {
+        "description": "Raw M4A decoded to 24kHz mono PCM",
+        "similarity": 80.59,
+        "mfcc_similarity": 0.9914,
+        "f0_delta": -9.41,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life.",
+        "duration": 8.075333333333333
+      },
+      "Var_B_Speech_Trim": {
+        "description": "Leading and trailing silence trimmed (-45dB)",
+        "similarity": 76.01,
+        "mfcc_similarity": 0.93,
+        "f0_delta": -8.28,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life.",
+        "duration": 7.883333333333334
+      },
+      "Var_C_Highpass70Hz": {
+        "description": "Conservative highpass filter at 70Hz",
+        "similarity": 77.9,
+        "mfcc_similarity": 0.9827,
+        "f0_delta": -9.04,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life.",
+        "duration": 7.467333333333333
+      },
+      "Var_D_PeakNorm": {
+        "description": "Peak normalized amplitude",
+        "similarity": 75.72,
+        "mfcc_similarity": 0.9904,
+        "f0_delta": -7.84,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life.",
+        "duration": 8.726
+      },
+      "Var_E_Loudnorm": {
+        "description": "EBU R128 Loudnorm (I=-16, LRA=11)",
+        "similarity": 79.11,
+        "mfcc_similarity": 0.9913,
+        "f0_delta": -2.62,
+        "transcription": "Welcome to the Voice AI Studio, where a neural speech synthesis brings natural voices to life.",
+        "duration": 8.448666666666666
+      },
+      "Var_F_Formant_EQ": {
+        "description": "Formant clarity EQ boost at 2.5kHz",
+        "similarity": 81.1,
+        "mfcc_similarity": 0.9924,
+        "f0_delta": 0.16,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life.",
+        "duration": 9.515333333333333
+      }
+    },
+    "best_reference_variant": {
+      "key": "Var_F_Formant_EQ",
+      "similarity": 81.1,
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_var_f_eq.wav"
+    },
+    "segment_search": {
+      "Seg_1_Full_8s": {
+        "start": 0.0,
+        "end": 8.213333333333333,
+        "duration": 8.213333333333333,
+        "similarity": 77.68,
+        "mfcc_similarity": 0.9932,
+        "f0_delta": 14.86,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      },
+      "Seg_2_Sentence1": {
+        "start": 0.0,
+        "end": 7.0,
+        "duration": 7.0,
+        "similarity": 78.06,
+        "mfcc_similarity": 0.9893,
+        "f0_delta": -7.5,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "Seg_3_Core_Clean": {
+        "start": 0.5,
+        "end": 6.8,
+        "duration": 6.3,
+        "similarity": 78.69,
+        "mfcc_similarity": 0.987,
+        "f0_delta": -1.48,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      },
+      "Seg_4_Full_CleanTrim": {
+        "start": 0.2,
+        "end": 8.0,
+        "duration": 7.8,
+        "similarity": 79.75,
+        "mfcc_similarity": 0.994,
+        "f0_delta": -16.15,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      }
+    },
+    "best_segment": {
+      "key": "Seg_4_Full_CleanTrim",
+      "similarity": 79.75,
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_Seg_4_Full_CleanTrim.wav"
+    },
+    "temperature_sweep": {
+      "0.65": {
+        "temperature": 0.65,
+        "similarity": 79.62,
+        "f0_std": 47.255761247021624,
+        "mfcc_sim": 0.9937,
+        "transcription": "Welcome to the Voice AS Studio, where Norl's speech synthesis brings natural voices to life."
+      },
+      "0.7": {
+        "temperature": 0.7,
+        "similarity": 78.24,
+        "f0_std": 39.68758489779078,
+        "mfcc_sim": 0.9863,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "0.75": {
+        "temperature": 0.75,
+        "similarity": 78.21,
+        "f0_std": 39.45925513611122,
+        "mfcc_sim": 0.994,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "0.8": {
+        "temperature": 0.8,
+        "similarity": 78.32,
+        "f0_std": 48.33860349742114,
+        "mfcc_sim": 0.9915,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "0.85": {
+        "temperature": 0.85,
+        "similarity": 83.4,
+        "f0_std": 47.7188933948867,
+        "mfcc_sim": 0.9906,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech synthesis brings natural voices to life."
+      }
+    },
+    "top_p_sweep": {
+      "0.75": {
+        "top_p": 0.75,
+        "similarity": 75.03,
+        "mfcc_sim": 0.9902,
+        "transcription": "Welcome to the Voice AI Studio, Renewal Speech Synthesis brings natural voices to life."
+      },
+      "0.8": {
+        "top_p": 0.8,
+        "similarity": 75.54,
+        "mfcc_sim": 0.9914,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "0.85": {
+        "top_p": 0.85,
+        "similarity": 80.31,
+        "mfcc_sim": 0.9953,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis trains natural voices to life."
+      },
+      "0.88": {
+        "top_p": 0.88,
+        "similarity": 80.32,
+        "mfcc_sim": 0.9965,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life. Well, well, I tune in, so I'll try my way."
+      },
+      "0.92": {
+        "top_p": 0.92,
+        "similarity": 77.44,
+        "mfcc_sim": 0.9888,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      }
+    },
+    "repetition_penalty_sweep": {
+      "2.5": {
+        "repetition_penalty": 2.5,
+        "similarity": 79.13,
+        "mfcc_sim": 0.9874,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "4.0": {
+        "repetition_penalty": 4.0,
+        "similarity": 76.09,
+        "mfcc_sim": 0.9871,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      },
+      "5.0": {
+        "repetition_penalty": 5.0,
+        "similarity": 76.96,
+        "mfcc_sim": 0.9819,
+        "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+      },
+      "7.0": {
+        "repetition_penalty": 7.0,
+        "similarity": 81.11,
+        "mfcc_sim": 0.9934,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      },
+      "9.0": {
+        "repetition_penalty": 9.0,
+        "similarity": 77.24,
+        "mfcc_sim": 0.9916,
+        "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+      }
+    },
+    "post_processing": {
+      "A_Pure_Raw": {
+        "description": "Direct Raw XTTS v2 24kHz output",
+        "similarity": 76.56,
+        "mfcc_sim": 0.9918,
+        "spectral_centroid": 3036.224146081373,
+        "f0_std": 55.23681793489924
+      },
+      "B_Gentle_Deharsh": {
+        "description": "Gentle 6kHz high-shelf de-harshing (-1.0dB)",
+        "similarity": 76.56,
+        "mfcc_sim": 0.9918,
+        "spectral_centroid": 3034.0349687042044,
+        "f0_std": 55.235798996042874
+      },
+      "C_Loudnorm": {
+        "description": "EBU R128 Loudness Normalization",
+        "similarity": 76.78,
+        "mfcc_sim": 0.991,
+        "spectral_centroid": 3009.7382720944015,
+        "f0_std": 55.2473541122269
+      }
+    },
+    "best_postproc": {
+      "key": "C_Loudnorm",
+      "similarity": 76.78
+    }
+  },
+  "canonical_baseline": {
+    "id": "PHASE_13F_BASELINE",
+    "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13f_canonical_baseline.wav",
+    "sha256": "2cd421a6177f78159d9fda31449b2a3183e8f1a68a161e65566b2a675df543b3",
+    "duration": 6.955333333333333,
+    "inference_time": 10.436341285705566,
+    "text": "Welcome to the voice AI studio, where neural speech synthesis brings natural voices to life.",
+    "temperature": 0.8,
+    "top_p": 0.88,
+    "repetition_penalty": 5.0,
+    "length_penalty": 1.05,
+    "speed": 1.0,
+    "similarity_percent": 77.12,
+    "mfcc_similarity": 0.9893,
+    "f0_mean_delta": 8.1,
+    "f0_std": 37.025627487236775,
+    "spectral_centroid": 3000.7009282005847,
+    "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life.",
+    "interpretation": [
+      "GOOD_SPEAKER_MATCH (75-80%)",
+      "PITCH_REGISTER_ALIGNED (|delta| < 30Hz)",
+      "CLIPPING_DETECTED (0.00%)",
+      "ASR_INTELLIGIBILITY_VERIFIED"
+    ]
+  },
+  "multi_text_benchmark": {
+    "items": [
+      {
+        "id": "text_01_statement",
+        "type": "Statement",
+        "text": "Advanced artificial intelligence is transforming modern voice technology.",
+        "baseline": {
+          "similarity": 78.46,
+          "f0_std": 28.10956647135133,
+          "transcription": "I don't know how, I don't miss you."
+        },
+        "optimized": {
+          "similarity": 75.91,
+          "f0_std": 39.09056167221187,
+          "transcription": "Advanced artificial intelligence is transforming modern voice technology."
+        },
+        "delta_similarity": -2.55
+      },
+      {
+        "id": "text_02_question",
+        "type": "Question",
+        "text": "Could you please tell me how long this journey will take?",
+        "baseline": {
+          "similarity": 74.43,
+          "f0_std": 47.06571451197423,
+          "transcription": "Could you please tell me how long this journey will take?"
+        },
+        "optimized": {
+          "similarity": 78.49,
+          "f0_std": 43.25650256979307,
+          "transcription": "Could you please tell me how all this journey will take?"
+        },
+        "delta_similarity": 4.06
+      },
+      {
+        "id": "text_03_long",
+        "type": "Long Sentence",
+        "text": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches.",
+        "baseline": {
+          "similarity": 76.4,
+          "f0_std": 33.74126749603978,
+          "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+        },
+        "optimized": {
+          "similarity": 77.88,
+          "f0_std": 31.776798268447127,
+          "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+        },
+        "delta_similarity": 1.48
+      },
+      {
+        "id": "text_04_comma_heavy",
+        "type": "Comma-Heavy",
+        "text": "First, prepare the dataset, clean the noisy recordings, verify the speaker identity, and then run the training pipeline.",
+        "baseline": {
+          "similarity": 77.31,
+          "f0_std": 38.37270849489726,
+          "transcription": "First, prepare the data set, clean the noisy recordings, verify the speaker identity, and then run the training pipeline."
+        },
+        "optimized": {
+          "similarity": 80.29,
+          "f0_std": 43.52695731480167,
+          "transcription": "First, prepare the data set, clean the noisy recordings, verify the speaker identity, and then run the training pipeline."
+        },
+        "delta_similarity": 2.98
+      },
+      {
+        "id": "text_05_conversational",
+        "type": "Conversational",
+        "text": "Yeah, that sounds like a great plan, let's definitely catch up tomorrow morning.",
+        "baseline": {
+          "similarity": 73.29,
+          "f0_std": 34.270220170373676,
+          "transcription": "Yeah, that sounds like a great plan. Let's definitely catch up tomorrow morning."
+        },
+        "optimized": {
+          "similarity": 77.32,
+          "f0_std": 38.98339525509469,
+          "transcription": "Yeah, that sounds like a great plan. Let's definitely catch up tomorrow morning."
+        },
+        "delta_similarity": 4.03
+      },
+      {
+        "id": "text_06_calm",
+        "type": "Calm",
+        "text": "Take a slow, deep breath, listen to the gentle sound of rain outside, and relax your mind.",
+        "baseline": {
+          "similarity": 78.24,
+          "f0_std": 58.01454915553475,
+          "transcription": "Take a slow deep breath, listen to the gentle sound of rain outside and relax your mind."
+        },
+        "optimized": {
+          "similarity": 83.7,
+          "f0_std": 38.44243439509427,
+          "transcription": "Take a slow deep breath. Listen to the gentle sound of rain outside and relax your mind."
+        },
+        "delta_similarity": 5.46
+      },
+      {
+        "id": "text_07_energetic",
+        "type": "Energetic",
+        "text": "Look at that incredible performance, we actually won the championship match today!",
+        "baseline": {
+          "similarity": 75.1,
+          "f0_std": 90.19918266973674,
+          "transcription": "Look at that incredible performance, we actually won the championship match today."
+        },
+        "optimized": {
+          "similarity": 78.29,
+          "f0_std": 79.63890978264139,
+          "transcription": "Look at that incredible performance. We actually won the championship match today."
+        },
+        "delta_similarity": 3.19
+      },
+      {
+        "id": "text_08_emotional",
+        "type": "Emotional",
+        "text": "I cannot express how deeply grateful I am for all your kindness and unwavering support.",
+        "baseline": {
+          "similarity": 78.29,
+          "f0_std": 43.60164933900116,
+          "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+        },
+        "optimized": {
+          "similarity": 81.47,
+          "f0_std": 26.405425988031315,
+          "transcription": "and not express how deeply grateful I am for all your kindness and unwavering support."
+        },
+        "delta_similarity": 3.18
+      },
+      {
+        "id": "text_09_multi_clause",
+        "type": "Multi-Clause",
+        "text": "Although the initial experiment showed promising results, further acoustic testing was necessary before we could deploy the model to production.",
+        "baseline": {
+          "similarity": 76.23,
+          "f0_std": 63.17043492030262,
+          "transcription": "Although the initial experiment showed promising results, further acoustic testing was necessary before we could deploy the model to production."
+        },
+        "optimized": {
+          "similarity": 77.81,
+          "f0_std": 34.94366852700203,
+          "transcription": "Although the initial experiment showed promising results, further acoustic testing was necessary before we could deploy the model to production."
+        },
+        "delta_similarity": 1.58
+      },
+      {
+        "id": "text_10_dialogue",
+        "type": "Dialogue",
+        "text": "Hey there! Are you ready to get started on the new voice synthesis project today?",
+        "baseline": {
+          "similarity": 78.69,
+          "f0_std": 46.38489014696777,
+          "transcription": "Hey, are you ready to get started on the new voice synthesis project today?"
+        },
+        "optimized": {
+          "similarity": 77.74,
+          "f0_std": 32.07542449841082,
+          "transcription": "Hey there! Are you ready to get started on the new voice since this is project today?"
+        },
+        "delta_similarity": -0.95
+      }
+    ],
+    "statistics": {
+      "baseline": {
+        "mean": 76.64,
+        "min": 73.29,
+        "max": 78.69,
+        "std": 1.79
+      },
+      "optimized": {
+        "mean": 78.89,
+        "min": 75.91,
+        "max": 83.7,
+        "std": 2.17
+      },
+      "mean_improvement_delta": 2.25
+    }
+  },
+  "human_listening_package": [
+    {
+      "pair_id": "pair_01_statement",
+      "text": "Advanced artificial intelligence is transforming modern voice technology.",
+      "audio_A_baseline": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\ab_listening\\pair_01_statement_A_baseline.wav",
+      "audio_B_optimized": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\ab_listening\\pair_01_statement_B_optimized.wav"
+    },
+    {
+      "pair_id": "pair_02_conversational",
+      "text": "Yeah, that sounds like a great plan, let's definitely catch up tomorrow morning.",
+      "audio_A_baseline": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\ab_listening\\pair_02_conversational_A_baseline.wav",
+      "audio_B_optimized": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\ab_listening\\pair_02_conversational_B_optimized.wav"
+    },
+    {
+      "pair_id": "pair_03_emotional",
+      "text": "I cannot express how deeply grateful I am for all your kindness and unwavering support.",
+      "audio_A_baseline": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\ab_listening\\pair_03_emotional_A_baseline.wav",
+      "audio_B_optimized": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\ab_listening\\pair_03_emotional_B_optimized.wav"
+    }
+  ],
+  "BEST_CONFIG": {
+    "model": "xtts-v2",
+    "voice_profile_id": "chocho",
+    "alias": "aadi",
+    "reference_variant": "Var_F_Formant_EQ",
+    "reference_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\ref_Seg_4_Full_CleanTrim.wav",
+    "segment": "Seg_4_Full_CleanTrim",
+    "temperature": 0.85,
+    "top_p": 0.88,
+    "repetition_penalty": 7.0,
+    "length_penalty": 1.05,
+    "speed": 1.0,
+    "post_processing": "FORMAT_ONLY_BYPASS",
+    "language": "en",
+    "measured_metrics": {
+      "canonical_baseline_similarity": 77.12,
+      "optimized_canonical_similarity": 79.75,
+      "multi_text_mean_similarity": 78.88999999999999,
+      "multi_text_min_similarity": 75.91,
+      "multi_text_max_similarity": 83.7,
+      "net_gain": 2.25
+    },
+    "updated_at": "2026-08-30T06:45:00Z"
+  }
+}

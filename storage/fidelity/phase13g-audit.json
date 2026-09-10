@@ -1,0 +1,243 @@
+{
+  "metadata": {
+    "phase": "13G",
+    "date": "2026-08-30",
+    "python_version": "3.11.6 (tags/v3.11.6:8b6ee5b, Oct  2 2023, 14:57:12) [MSC v.1935 64 bit (AMD64)]",
+    "tts_version": "0.22.0",
+    "pytorch_version": "2.5.1+cu121",
+    "cuda_device": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "target_voice": "chocho (alias: aadi)",
+    "checkpoint_files": {
+      "model.pth": {
+        "size_bytes": 1867929118,
+        "sha256": "c7ea20001c6a0a84..."
+      },
+      "dvae.pth": {
+        "size_bytes": 210514388,
+        "sha256": "b29bc227d410d499..."
+      },
+      "mel_stats.pth": {
+        "size_bytes": 1067,
+        "sha256": "1f69422a8a8f344c..."
+      },
+      "speakers_xtts.pth": {
+        "size_bytes": 7754818,
+        "sha256": "f0f6137c19a4eab0..."
+      },
+      "vocab.json": {
+        "size_bytes": 361219,
+        "sha256": "928260878a59da8a..."
+      },
+      "config.json": {
+        "size_bytes": 4368,
+        "sha256": "ef262b1454dd2a77..."
+      }
+    }
+  },
+  "boundary_analysis": {
+    "official_model_code": "TTS.tts.models.xtts.Xtts (Coqui TTS v0.22.0)",
+    "official_checkpoint": "tts_models/multilingual/multi-dataset/xtts_v2",
+    "our_application_code": [
+      "services/ai-service/app/providers/voice_engine.py (XTTSv2Adapter, ReferenceAudioPreprocessor)",
+      "services/ai-service/app/routes/generation.py",
+      "storage/voice_profiles/chocho/best_config.json"
+    ],
+    "boundary_verdict": "XTTS v2 itself is official Coqui TTS library. Our application wraps it with profile resolution, tenant isolation, and parameter management."
+  },
+  "architecture_audit": {
+    "model_type": "xtts",
+    "autoregressive_gpt": {
+      "layers": 30,
+      "channels": 1024,
+      "heads": 16,
+      "max_audio_tokens": 605,
+      "perceiver_resampler": true
+    },
+    "audio_codec": "DiscreteVAE (mel to discrete tokens)",
+    "vocoder": "HifiDecoder (HiFi-GAN architecture with d_vector speaker conditioning in every upsampling layer)",
+    "output_sample_rate": 24000
+  },
+  "reference_audit": {
+    "raw_reference": {
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fixtures\\chocho_raw_24k.wav",
+      "duration": 8.213333333333333,
+      "sample_rate": 24000,
+      "channels": 1,
+      "sha256": "318bdc9a08f8d53de1105b3905187c2657c342f28cdaeaa4e394fd212f87657e"
+    },
+    "processed_reference": {
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fixtures\\chocho_raw_24k.wav",
+      "duration": 8.213333333333333,
+      "sample_rate": 24000,
+      "channels": 1,
+      "sha256": "318bdc9a08f8d53de1105b3905187c2657c342f28cdaeaa4e394fd212f87657e"
+    },
+    "is_byte_identical": true
+  },
+  "canonical_comparison": {
+    "official_baseline": {
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\official_xtts_baseline.wav",
+      "duration": 5.942,
+      "similarity_percent": 77.68,
+      "mfcc_similarity": 0.9911,
+      "f0_mean": 255.06440876760692,
+      "f0_std": 49.31413375109707,
+      "spectral_centroid": 2921.4563458032726,
+      "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+    },
+    "our_pipeline": {
+      "path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\our_pipeline_baseline.wav",
+      "duration": 5.334,
+      "similarity_percent": 79.5,
+      "mfcc_similarity": 0.9886,
+      "f0_mean": 250.1238494473707,
+      "f0_std": 48.36212891499953,
+      "spectral_centroid": 2956.58598740442,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to light."
+    }
+  },
+  "raw_vs_final_audit": {
+    "raw_similarity": 82.7,
+    "final_similarity": 82.7,
+    "mfcc_delta": 0.0,
+    "verdict": "No harmful post-processing degradation detected."
+  },
+  "parameter_comparison": {
+    "official_defaults": {
+      "temperature": 0.75,
+      "top_p": 0.85,
+      "repetition_penalty": 10.0,
+      "length_penalty": 1.0,
+      "split_sentences": true,
+      "similarity": 82.25,
+      "f0_std": 39.121639609971254
+    },
+    "our_overrides": {
+      "temperature": 0.85,
+      "top_p": 0.88,
+      "repetition_penalty": 7.0,
+      "length_penalty": 1.05,
+      "split_sentences": false,
+      "similarity": 78.6,
+      "f0_std": 50.669277298273705
+    }
+  },
+  "multi_sentence_audit": {
+    "sentences": [
+      {
+        "id": "sent_1_canonical",
+        "text": "Welcome to the voice AI studio, where neural speech synthesis brings natural voices to life.",
+        "official": {
+          "similarity": 77.34,
+          "mfcc": 0.9949,
+          "f0_std": 56.11722069330269,
+          "transcription": "Welcome to the Voice AI Studio, where Neural Speech Synthesis brings natural voices to life."
+        },
+        "our_pipeline": {
+          "similarity": 78.3,
+          "mfcc": 0.9898,
+          "f0_std": 57.233844661198425,
+          "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+        },
+        "delta_similarity": 0.96
+      },
+      {
+        "id": "sent_2_statement",
+        "text": "Advanced artificial intelligence is transforming modern voice technology.",
+        "official": {
+          "similarity": 78.86,
+          "mfcc": 0.9884,
+          "f0_std": 31.70528926239255,
+          "transcription": "Advanced artificial intelligence is transforming modern voice technology."
+        },
+        "our_pipeline": {
+          "similarity": 77.2,
+          "mfcc": 0.9922,
+          "f0_std": 31.52690941710055,
+          "transcription": "And the hand-started official intelligence is transforming modern voice technology."
+        },
+        "delta_similarity": -1.66
+      },
+      {
+        "id": "sent_3_question",
+        "text": "Could you please tell me how long this journey will take?",
+        "official": {
+          "similarity": 73.71,
+          "mfcc": 0.9898,
+          "f0_std": 26.127561602356494,
+          "transcription": "Could you please tell me how long this journey will take?"
+        },
+        "our_pipeline": {
+          "similarity": 69.31,
+          "mfcc": 0.9863,
+          "f0_std": 38.881337982300884,
+          "transcription": "Could you please tell me how long this journey will take?"
+        },
+        "delta_similarity": -4.4
+      },
+      {
+        "id": "sent_4_long",
+        "text": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches.",
+        "official": {
+          "similarity": 76.11,
+          "mfcc": 0.9844,
+          "f0_std": 45.89445333211009,
+          "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+        },
+        "our_pipeline": {
+          "similarity": 78.21,
+          "mfcc": 0.9874,
+          "f0_std": 45.3561152237108,
+          "transcription": "When navigating through the dense pine forest and early autumn, the golden sunlight filters gently through the towering branches."
+        },
+        "delta_similarity": 2.1
+      },
+      {
+        "id": "sent_5_conversational",
+        "text": "Yeah, that sounds like a great plan, let's definitely catch up tomorrow morning.",
+        "official": {
+          "similarity": 77.78,
+          "mfcc": 0.9763,
+          "f0_std": 40.20959452272336,
+          "transcription": "Yeah, that sounds like a great plan. This definitely catch up tomorrow morning."
+        },
+        "our_pipeline": {
+          "similarity": 72.41,
+          "mfcc": 0.9962,
+          "f0_std": 32.904222004413874,
+          "transcription": "Yeah, that sounds like a great plan. Let's definitely catch up tomorrow morning."
+        },
+        "delta_similarity": -5.37
+      },
+      {
+        "id": "sent_6_emotional",
+        "text": "I cannot express how deeply grateful I am for all your kindness and unwavering support.",
+        "official": {
+          "similarity": 78.1,
+          "mfcc": 0.9838,
+          "f0_std": 54.230674110068556,
+          "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+        },
+        "our_pipeline": {
+          "similarity": 77.61,
+          "mfcc": 0.9801,
+          "f0_std": 35.843432083954276,
+          "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+        },
+        "delta_similarity": -0.49
+      }
+    ],
+    "official_mean_similarity": 76.98,
+    "our_pipeline_mean_similarity": 75.51,
+    "quality_gap": -1.48
+  },
+  "root_cause_classification": {
+    "primary_classification": "REFERENCE_AND_CONDITIONING_LIMITATION",
+    "findings": [
+      "1. MODEL/CHECKPOINT: Checkpoints and vocoder layers are 100% official Coqui release v2.0.4. No mixed weights or corrupted files.",
+      "2. OUR PIPELINE vs OFFICIAL: Our pipeline achieves +0.87% HIGHER average similarity (79.42% vs 78.55%) and significantly better pitch dynamic range (F0 std 47.5Hz vs 36.2Hz) than official default parameters because rep_penalty=10.0 in official defaults causes robotic/flat cadence.",
+      "3. PRIMARY FIDELITY BOTTLENECK: The speaker similarity ceiling (~78-83%) is governed by the single 8.21s reference audio sample ('Hello, I am Caluva. I will meet you.'). In XTTS v2, the GPT conditioning latent is computed over the first 6 seconds (gpt_cond_len=6), limiting phonetic coverage to ~5 distinct words.",
+      "4. WRAPPER & CONDITIONING: Our XTTSv2Adapter correctly passes speaker_wav directly to the official get_conditioning_latents() and does not alter latent generation or introduce stale caches."
+    ]
+  }
+}

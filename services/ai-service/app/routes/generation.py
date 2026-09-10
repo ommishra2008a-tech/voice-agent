@@ -22,9 +22,17 @@ def generate_voice(req: VoiceGenerationRequest):
     engine = VoiceEngineRegistry.get_engine(req.model)
     res = engine.synthesize(req)
     if res.status == "FAILED":
-        if "VOICE_PROFILE_ACCESS_DENIED" in (res.error or ""):
-            raise HTTPException(status_code=403, detail=res.error)
-        raise HTTPException(status_code=400, detail=res.error or "Voice synthesis failed")
+        err_msg = res.error or "Voice synthesis failed"
+        if "VOICE_PROFILE_ACCESS_DENIED" in err_msg:
+            raise HTTPException(status_code=403, detail=err_msg)
+        if "MODEL_UNAVAILABLE" in err_msg:
+            raise HTTPException(status_code=400, detail="This model is currently unavailable.")
+        if "VOICE_PROFILE_NOT_SUPPORTED_BY_ENGINE" in err_msg:
+            raise HTTPException(
+                status_code=400,
+                detail="FastPitch is a baseline single-speaker model and does not support custom voice cloning. Please select XTTS v2 for voice cloning."
+            )
+        raise HTTPException(status_code=400, detail=err_msg)
     return res
 
 

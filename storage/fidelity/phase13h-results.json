@@ -1,0 +1,293 @@
+{
+  "phase": "13H",
+  "date": "2026-08-30",
+  "target_voice": "chocho",
+  "canonical_experiments": {
+    "REF_A_Single_Canonical": {
+      "name": "REF-A (Canonical Single Reference chocho v1)",
+      "count": 1,
+      "total_ref_duration": 8.21,
+      "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13h\\canonical_REF_A_Single_Canonical.wav",
+      "latency_sec": 10.93,
+      "similarity_percent": 78.82,
+      "mfcc_similarity": 0.9924,
+      "f0_std": 39.375882540960134,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "REF_B_Single_BestSegment": {
+      "name": "REF-B (Best Single Segment - CleanTrim)",
+      "count": 1,
+      "total_ref_duration": 7.8,
+      "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13h\\canonical_REF_B_Single_BestSegment.wav",
+      "latency_sec": 10.31,
+      "similarity_percent": 80.09,
+      "mfcc_similarity": 0.9948,
+      "f0_std": 45.295294257295915,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "REF_C_2_Ref_Set": {
+      "name": "REF-C (2-Reference Set: Greeting + Followup)",
+      "count": 2,
+      "total_ref_duration": 8.41,
+      "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13h\\canonical_REF_C_2_Ref_Set.wav",
+      "latency_sec": 9.82,
+      "similarity_percent": 77.48,
+      "mfcc_similarity": 0.9864,
+      "f0_std": 46.78081963102863,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "REF_D_3_Ref_Set": {
+      "name": "REF-D (3-Reference Set: Greeting + Followup + CleanFull)",
+      "count": 3,
+      "total_ref_duration": 16.21,
+      "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13h\\canonical_REF_D_3_Ref_Set.wav",
+      "latency_sec": 8.57,
+      "similarity_percent": 78.21,
+      "mfcc_similarity": 0.9853,
+      "f0_std": 32.01307683971222,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    },
+    "REF_E_4_Ref_Set": {
+      "name": "REF-E (4-Reference Set: Greeting + Followup + CleanFull + CoreFormant)",
+      "count": 4,
+      "total_ref_duration": 22.51,
+      "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13h\\canonical_REF_E_4_Ref_Set.wav",
+      "latency_sec": 5.95,
+      "similarity_percent": 78.49,
+      "mfcc_similarity": 0.9802,
+      "f0_std": 26.091465368737232,
+      "transcription": "Welcome to the Voice AI Studio, where Neural Speech synthesis brings natural voices to life."
+    },
+    "REF_F_5_Ref_Set": {
+      "name": "REF-F (5-Reference Set: Full Multi-Sample Set)",
+      "count": 5,
+      "total_ref_duration": 30.72,
+      "output_path": "D:\\testing\\projects\\AGENT\\voice-agent\\tests\\fidelity-optimization\\phase13h\\canonical_REF_F_5_Ref_Set.wav",
+      "latency_sec": 8.16,
+      "similarity_percent": 83.77,
+      "mfcc_similarity": 0.9896,
+      "f0_std": 53.39426576188206,
+      "transcription": "Welcome to the Voice AI Studio, where neural speech synthesis brings natural voices to life."
+    }
+  },
+  "best_reference_configuration": "REF_F_5_Ref_Set",
+  "multi_text_benchmark": {
+    "sentences": [
+      {
+        "id": "text_01_statement",
+        "type": "Statement",
+        "text": "Advanced artificial intelligence is transforming modern voice technology.",
+        "single_ref_v1": {
+          "similarity": 75.28,
+          "mfcc": 0.9895,
+          "f0_std": 41.62053022496243,
+          "latency_sec": 5.32,
+          "transcription": "Advanced artificial intelligence is transforming modern voice technology."
+        },
+        "multi_ref_v2": {
+          "similarity": 78.08,
+          "mfcc": 0.9876,
+          "f0_std": 28.61069285533287,
+          "latency_sec": 7.51,
+          "transcription": "Eddant's artificial intelligence is transforming modern voice technology."
+        },
+        "delta_similarity": 2.8
+      },
+      {
+        "id": "text_02_question",
+        "type": "Question",
+        "text": "Could you please tell me how long this journey will take?",
+        "single_ref_v1": {
+          "similarity": 79.38,
+          "mfcc": 0.9925,
+          "f0_std": 34.20080526104842,
+          "latency_sec": 3.53,
+          "transcription": "Could you please tell me how long this journey will take?"
+        },
+        "multi_ref_v2": {
+          "similarity": 79.84,
+          "mfcc": 0.9971,
+          "f0_std": 41.23759878239292,
+          "latency_sec": 6.04,
+          "transcription": "Could you please tell me how long this journey will take?"
+        },
+        "delta_similarity": 0.46
+      },
+      {
+        "id": "text_03_conversational",
+        "type": "Conversational",
+        "text": "Yeah, that sounds like a great plan, let's definitely catch up tomorrow morning.",
+        "single_ref_v1": {
+          "similarity": 77.88,
+          "mfcc": 0.9959,
+          "f0_std": 33.79729976629905,
+          "latency_sec": 7.21,
+          "transcription": "Yeah, that sounds like a great plan. Let's definitely catch up tomorrow morning."
+        },
+        "multi_ref_v2": {
+          "similarity": 77.08,
+          "mfcc": 0.9942,
+          "f0_std": 50.366246552354816,
+          "latency_sec": 6.53,
+          "transcription": "Yeah, that sounds like a great plan. Let's definitely catch up tomorrow morning."
+        },
+        "delta_similarity": -0.8
+      },
+      {
+        "id": "text_04_long",
+        "type": "Long Sentence",
+        "text": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches.",
+        "single_ref_v1": {
+          "similarity": 76.47,
+          "mfcc": 0.9825,
+          "f0_std": 33.71205032182047,
+          "latency_sec": 8.96,
+          "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+        },
+        "multi_ref_v2": {
+          "similarity": 79.78,
+          "mfcc": 0.9848,
+          "f0_std": 37.99429100094999,
+          "latency_sec": 8.87,
+          "transcription": "When navigating through the dense pine forest in early autumn, the golden sunlight filters gently through the towering branches."
+        },
+        "delta_similarity": 3.31
+      },
+      {
+        "id": "text_05_comma_heavy",
+        "type": "Comma-Heavy",
+        "text": "First, prepare the dataset, clean the noisy recordings, verify the speaker identity, and then run the training pipeline.",
+        "single_ref_v1": {
+          "similarity": 79.51,
+          "mfcc": 0.9935,
+          "f0_std": 42.46444719418859,
+          "latency_sec": 9.83,
+          "transcription": "First, prepare the data set, clean the noisy recordings, verify the speaker identity, and then run the training pipeline."
+        },
+        "multi_ref_v2": {
+          "similarity": 80.54,
+          "mfcc": 0.9826,
+          "f0_std": 44.86962720996308,
+          "latency_sec": 10.07,
+          "transcription": "First, prepare a DSC, clean the noisy recordings, verify to speak your identity, and then run the training pipeline."
+        },
+        "delta_similarity": 1.03
+      },
+      {
+        "id": "text_06_calm",
+        "type": "Calm",
+        "text": "Take a slow, deep breath, listen to the gentle sound of rain outside, and relax your mind.",
+        "single_ref_v1": {
+          "similarity": 78.63,
+          "mfcc": 0.989,
+          "f0_std": 24.16207837400018,
+          "latency_sec": 10.58,
+          "transcription": "Take a slow deep breath, listen to the gentle sound of rain outside and relax your mind."
+        },
+        "multi_ref_v2": {
+          "similarity": 78.82,
+          "mfcc": 0.9899,
+          "f0_std": 46.93264328886648,
+          "latency_sec": 10.5,
+          "transcription": "Take a slow deep breath, listen to the gentle sound of rain outside and relax your mind."
+        },
+        "delta_similarity": 0.19
+      },
+      {
+        "id": "text_07_energetic",
+        "type": "Energetic",
+        "text": "Look at that incredible performance, we actually won the championship match today!",
+        "single_ref_v1": {
+          "similarity": 75.11,
+          "mfcc": 0.9912,
+          "f0_std": 54.34547538656836,
+          "latency_sec": 6.43,
+          "transcription": "Look at that incredible performance, we actually won the championship match today."
+        },
+        "multi_ref_v2": {
+          "similarity": 75.56,
+          "mfcc": 0.9876,
+          "f0_std": 44.047484507110596,
+          "latency_sec": 7.18,
+          "transcription": "Look at that incredible performance. We actually won the championship match today."
+        },
+        "delta_similarity": 0.45
+      },
+      {
+        "id": "text_08_emotional",
+        "type": "Emotional",
+        "text": "I cannot express how deeply grateful I am for all your kindness and unwavering support.",
+        "single_ref_v1": {
+          "similarity": 75.66,
+          "mfcc": 0.9825,
+          "f0_std": 30.51549532527614,
+          "latency_sec": 7.99,
+          "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+        },
+        "multi_ref_v2": {
+          "similarity": 79.94,
+          "mfcc": 0.9811,
+          "f0_std": 29.954379017298802,
+          "latency_sec": 9.91,
+          "transcription": "I cannot express how deeply grateful I am for all your kindness and unwavering support."
+        },
+        "delta_similarity": 4.28
+      },
+      {
+        "id": "text_09_multi_clause",
+        "type": "Multi-Clause",
+        "text": "Although the initial experiment showed promising results, further acoustic testing was necessary before we could deploy the model to production.",
+        "single_ref_v1": {
+          "similarity": 78.49,
+          "mfcc": 0.985,
+          "f0_std": 37.853064459052106,
+          "latency_sec": 9.92,
+          "transcription": "Although the initial experiment showed promising results, further acoustic testing was necessary before we could deploy the model to production."
+        },
+        "multi_ref_v2": {
+          "similarity": 77.91,
+          "mfcc": 0.9866,
+          "f0_std": 45.35739165775718,
+          "latency_sec": 11.05,
+          "transcription": "Although the initial experiment showed promising results, further acoustic testing was necessary before we could deploy the model to production."
+        },
+        "delta_similarity": -0.58
+      },
+      {
+        "id": "text_10_dialogue",
+        "type": "Dialogue",
+        "text": "Hey there! Are you ready to get started on the new voice synthesis project today?",
+        "single_ref_v1": {
+          "similarity": 76.21,
+          "mfcc": 0.9922,
+          "f0_std": 59.97225980582793,
+          "latency_sec": 5.16,
+          "transcription": "Hey there! Are you ready to get started on the new voice synthesis project today?"
+        },
+        "multi_ref_v2": {
+          "similarity": 77.69,
+          "mfcc": 0.9854,
+          "f0_std": 21.397193054624196,
+          "latency_sec": 6.94,
+          "transcription": "Hey, are you ready to get started on the new voice synthesis project today?"
+        },
+        "delta_similarity": 1.48
+      }
+    ],
+    "statistics": {
+      "single_ref_v1": {
+        "mean": 77.26,
+        "min": 75.11,
+        "max": 79.51,
+        "std": 1.62
+      },
+      "multi_ref_v2": {
+        "mean": 78.52,
+        "min": 75.56,
+        "max": 80.54,
+        "std": 1.47
+      },
+      "net_improvement_percent": 1.26
+    }
+  }
+}

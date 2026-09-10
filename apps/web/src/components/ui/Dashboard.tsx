@@ -7,6 +7,7 @@ import AboutModal from "./AboutModal";
 import SettingsModal from "./SettingsModal";
 import VoiceAttachmentModal from "./VoiceAttachmentModal";
 import GlobalCursorTrail from "./GlobalCursorTrail";
+import ModelBenchmarkLab from "./ModelBenchmarkLab";
 import {
   VoiceAILogo,
   IconMic,
@@ -17,7 +18,8 @@ import {
   IconMenu,
   IconX,
   IconPlus,
-  IconDna
+  IconDna,
+  IconZap
 } from "./Icons";
 
 interface DashboardProps {
@@ -44,6 +46,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
+  const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
 
   // Audio-reactive & Lip-Sync State
   const [currentViseme, setCurrentViseme] = useState("SILENCE");
@@ -418,6 +421,22 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                     </div>
                   </div>
                 </button>
+
+                <button
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    setIsBenchmarkOpen(true);
+                  }}
+                  className="w-full p-3 rounded-2xl flex items-center gap-3 transition-all text-left bg-[#0b142c] text-slate-200 hover:bg-[#12224d]"
+                >
+                  <IconZap className="w-4 h-4 text-purple-400" />
+                  <div>
+                    <div>Model Benchmarks &amp; Fidelity</div>
+                    <div className="text-[10px] text-slate-400 font-normal">
+                      Empirical improvement metrics &amp; latency
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -475,6 +494,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             onAudioPlaybackState={handleAudioPlaybackState}
             onVolumeChange={handleAudioVolumeChange}
             onOpenVoiceProfileLab={() => setIsGlobalAddOpen(true)}
+            onOpenBenchmarkLab={() => setIsBenchmarkOpen(true)}
           />
         </div>
       </main>
@@ -499,6 +519,27 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         onScriptExtracted={() => {}}
         onProfileCreated={(newP) => setProfiles((prev) => [newP, ...prev])}
       />
+
+      {/* Voice Model Benchmark & Fidelity Modal */}
+      {isBenchmarkOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-[#070e22] border border-cyan-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-[#1e293b]">
+              <div className="flex items-center gap-2.5">
+                <IconZap className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-white">Voice Model Benchmark &amp; Fidelity Scorecard</h3>
+              </div>
+              <button
+                onClick={() => setIsBenchmarkOpen(false)}
+                className="p-1.5 rounded-xl bg-[#0b142c] hover:bg-[#142246] text-slate-400 hover:text-white transition-all"
+              >
+                <IconX className="w-4 h-4" />
+              </button>
+            </div>
+            <ModelBenchmarkLab project={selectedProject} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

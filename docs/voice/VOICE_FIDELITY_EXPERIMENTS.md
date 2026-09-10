@@ -46,6 +46,86 @@
 
 ---
 
+## Phase 13F: Systematic Voice Fidelity & Acoustic Optimization
+
+**Date:** August 2026  
+**Target Identity:** `chocho` (alias: `aadi`)  
+**Hardware:** NVIDIA GeForce RTX 3050 Laptop GPU (6GB VRAM, CUDA 12.1)  
+**Evaluator Tool:** `scripts/xtts-fidelity-diagnostic.py` (Resemblyzer, librosa.pyin, Faster-Whisper)
+
+### 1. Canonical Baseline (`PHASE_13F_BASELINE`)
+- **Evaluation Sentence:** "Welcome to the voice AI studio, where neural speech synthesis brings natural voices to life."
+- **Reference Hash (SHA256):** `9432ac721c6bdc52b622dda80e3553ef9dbb1bf73bfff881e9b9edd242ee240d`
+- **Baseline Resemblyzer Similarity:** **77.12%**
+- **MFCC Cosine Similarity:** 0.9893
+- **F0 Pitch Delta:** +8.1 Hz (|delta| < 10 Hz)
+- **ASR Intelligibility:** 100% (Transcribed accurately by Faster-Whisper)
+
+### 2. Preprocessing Experiments (Variants A - G)
+| Variant | Description | Resemblyzer Similarity | MFCC Cosine | ASR Intelligibility |
+|---|---|---|---|---|
+| **Var_F_Formant_EQ** | Formant clarity EQ boost at 2.5kHz + highpass 60Hz | **81.10%** ← BEST | **0.9924** | 100% |
+| **Var_A_Raw_24k** | Raw M4A decoded to 24kHz mono PCM | 80.59% | 0.9914 | 100% |
+| **Var_E_Loudnorm** | EBU R128 Loudnorm (I=-16, LRA=11) | 79.11% | 0.9913 | 100% |
+| **Var_C_Highpass70Hz**| Conservative highpass filter at 70Hz | 77.90% | 0.9827 | 100% |
+| **Var_B_Speech_Trim** | Leading & trailing silence trimmed (-45dB) | 76.01% | 0.9300 | 100% |
+| **Var_D_PeakNorm** | Peak normalized amplitude | 75.72% | 0.9904 | 100% |
+
+### 3. Reference Continuous Segment Search
+| Segment | Time Range | Duration | Resemblyzer Similarity | Finding |
+|---|---|---|---|---|
+| **Seg_4_Full_CleanTrim** | [0.2s - 8.0s] | 7.8s | **79.75%** | Optimal continuous natural cadence without silence edge artifacts. |
+| **Seg_3_Core_Clean** | [0.5s - 6.8s] | 6.3s | 78.69% | Stable sustained formant window. |
+| **Seg_2_Sentence1** | [0.0s - 7.0s] | 7.0s | 78.06% | First sentence only. |
+| **Seg_1_Full_8s** | [0.0s - 8.2s] | 8.2s | 77.68% | Full original reference. |
+
+### 4. Hyperparameter Sweeps (Single Variable Controls)
+- **Temperature Sweep:**
+  - `0.65`: 79.62% (ASR slight degradation)
+  - `0.70`: 78.24%
+  - `0.75`: 78.21%
+  - `0.80`: 78.32% (Dynamic pitch naturalness)
+  - `0.85`: **83.40%** (High prosodic expressiveness)
+- **Top-P Sweep:**
+  - `0.75`: 75.03%
+  - `0.80`: 75.54%
+  - `0.85`: 80.31%
+  - `0.88`: **80.32%** (Highest acoustic detail)
+  - `0.92`: 77.44%
+- **Repetition Penalty Sweep:**
+  - `2.5`: 79.13%
+  - `4.0`: 76.09%
+  - `5.0`: 76.96%
+  - `7.0`: **81.11%** (Clean transition without stutter)
+  - `9.0`: 77.24%
+
+### 5. Multi-Text Consistency Benchmark (10 Diverse Sentences)
+| Sentence Type | Baseline Resemblyzer | Optimized Resemblyzer | Net Gain | Faster-Whisper ASR Status |
+|---|---|---|---|---|
+| Statement | 78.46% | 75.91% | -2.55% | Intelligible |
+| Question | 74.43% | 78.49% | **+4.06%** | Intelligible |
+| Long Sentence | 76.40% | 77.88% | **+1.48%** | Intelligible |
+| Comma-Heavy | 77.31% | 80.29% | **+2.98%** | Intelligible |
+| Conversational | 73.29% | 77.32% | **+4.03%** | Intelligible |
+| Calm | 78.24% | **83.70%** | **+5.46%** | Intelligible |
+| Energetic | 75.10% | 78.29% | **+3.19%** | Intelligible |
+| Emotional | 78.29% | 81.47% | **+3.18%** | Intelligible |
+| Multi-Clause | 76.23% | 77.81% | **+1.58%** | Intelligible |
+| Dialogue | 78.69% | 77.74% | -0.95% | Intelligible |
+
+**Consistency Statistics (10 Sentences):**
+- **Baseline Mean:** `76.64%` (Min: 73.29%, Max: 78.69%, Std: 1.79%)
+- **Optimized Mean:** `78.89%` (Min: 75.91%, Max: **83.70%**, Std: 2.17%)
+- **Net Gain:** **`+2.25%` Mean Resemblyzer Improvement** across all sentence modalities.
+
+### 6. Human Listening Package Generated
+Stored at `storage/ab_listening/`:
+1. `pair_01_statement_A_baseline.wav` vs `pair_01_statement_B_optimized.wav`
+2. `pair_02_conversational_A_baseline.wav` vs `pair_02_conversational_B_optimized.wav`
+3. `pair_03_emotional_A_baseline.wav` vs `pair_03_emotional_B_optimized.wav`
+
+---
+
 ## Experiment 3: Reference Preprocessing A/B Test
 
 Each variant was generated from the same original `aadi.m4a`, converted differently, then used to generate the same text via XTTSv2.

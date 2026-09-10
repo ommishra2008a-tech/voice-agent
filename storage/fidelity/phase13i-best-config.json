@@ -1,0 +1,28 @@
+{
+  "model": "xtts-v2",
+  "voice_profile_id": "chocho",
+  "alias": "aadi",
+  "temperature": 0.85,
+  "repetition_penalty": 7.0,
+  "top_p": 0.88,
+  "length_penalty": 1.05,
+  "speed": 1.0,
+  "split_sentences_threshold": 250,
+  "conditioning": {
+    "gpt_cond_len": 30,
+    "gpt_cond_chunk_len": 6,
+    "max_ref_len": 30,
+    "multi_reference_enabled": true
+  },
+  "measured_metrics": {
+    "canonical_baseline_mean": 78.72,
+    "canonical_optimized_mean": 78.52,
+    "10_text_single_ref_mean": 76.99,
+    "10_text_multi_ref_mean": 78.21,
+    "variance_mean": 79.31,
+    "variance_std": 1.16,
+    "single_run_peak": 80.41,
+    "self_similarity_ceiling": 76.69
+  },
+  "updated_at": "2026-09-03T00:28:22Z"
+}

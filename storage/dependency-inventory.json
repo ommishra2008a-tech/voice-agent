@@ -1,0 +1,630 @@
+{
+  "project": {
+    "name": "voice-agent",
+    "path": "D:\\testing\\projects\\AGENT\\voice-agent",
+    "description": "Autonomous Voice AI Platform & Neural Speech Synthesis Engine",
+    "auditTimestamp": "2026-09-02T22:38:00+05:30",
+    "auditType": "FULL_PROJECT_DEPENDENCY_AUDIT_READ_ONLY"
+  },
+  "environment": {
+    "python": {
+      "version": "3.11.6",
+      "executable": "C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python311\\python.exe"
+    },
+    "node": {
+      "version": "22.17.1",
+      "npmVersion": "10.9.2"
+    },
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+      "vramTotalMb": 6144,
+      "driverVersion": "592.27",
+      "driverCudaVersion": "13.1",
+      "pytorchCudaVersion": "12.1",
+      "cuDnnVersion": "90100",
+      "cudaAvailable": true
+    },
+    "ffmpeg": {
+      "version": "9.0-full_build-www.gyan.dev",
+      "detected": true,
+      "ffprobeDetected": true
+    }
+  },
+  "pythonDependencies": [
+    {
+      "package": "torch",
+      "version": "2.5.1+cu121",
+      "category": "AI / ML Deep Learning Framework",
+      "usedBy": "services/ai-service/app (XTTS v2, FastPitch, Resemblyzer, ModelManager)",
+      "whyNeeded": "Core tensor computation and GPU acceleration layer for neural speech synthesis and speaker embeddings",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "torchaudio",
+      "version": "2.5.1+cu121",
+      "category": "Audio Signal Processing / PyTorch Audio",
+      "usedBy": "services/ai-service/app (Coqui TTS, audio pipelines)",
+      "whyNeeded": "PyTorch audio tensor operations, spectral transforms, and neural audio decoding",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "TTS",
+      "version": "0.22.0",
+      "category": "Neural Speech Synthesis Engine",
+      "usedBy": "services/ai-service/app/providers/voice_engine.py (XTTSv2Adapter, FastPitchSynthesizer)",
+      "whyNeeded": "Executes Coqui XTTS v2 zero-shot voice cloning and FastPitch single-speaker neural synthesis",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "faster-whisper",
+      "version": "1.2.1",
+      "category": "Speech-to-Text / Automatic Speech Recognition",
+      "usedBy": "services/ai-service/app/providers/stt_provider.py",
+      "whyNeeded": "High-performance transformer-based speech transcription with word/segment timestamps",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "ctranslate2",
+      "version": "4.8.1",
+      "category": "Transformer Inference Engine",
+      "usedBy": "faster-whisper",
+      "whyNeeded": "Fast, memory-efficient C++ inference runtime powering Faster-Whisper on CUDA/CPU",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "Resemblyzer",
+      "version": "0.1.4",
+      "category": "Speaker Identity & Voice Embeddings",
+      "usedBy": "scripts and fidelity diagnostics (scripts/xtts-fidelity-diagnostic.py, scripts/voice-naturalness-diagnostic.py)",
+      "whyNeeded": "Extracts 256-D d-vectors to compute cosine speaker similarity and evaluate cloning fidelity",
+      "runtimeDevTest": "Runtime / Diagnostic",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "fastapi",
+      "version": "0.141.1",
+      "category": "Backend REST API Web Framework",
+      "usedBy": "services/ai-service/app/main.py, routes",
+      "whyNeeded": "Exposes high-performance HTTP endpoints for speech generation, voice profiling, STT, and media processing",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "uvicorn",
+      "version": "0.52.4",
+      "category": "ASGI Web Server",
+      "usedBy": "services/ai-service/app/main.py",
+      "whyNeeded": "Runs the asynchronous FastAPI application server on port 8000",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "numpy",
+      "version": "1.26.4",
+      "category": "Scientific Computing / Array Processing",
+      "usedBy": "services/ai-service/app/providers (voice_analyzer, timing_engine, rag_engine, voice_engine)",
+      "whyNeeded": "Real PCM waveform manipulation, autocorrelation pitch tracking, FFT spectral analysis, MFCC computation",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "scipy",
+      "version": "1.17.1",
+      "category": "Scientific Computing / Signal Processing",
+      "usedBy": "services/ai-service/app, TTS, librosa",
+      "whyNeeded": "Signal filtering, cross-correlation, and statistical distribution computations",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "soundfile",
+      "version": "0.14.0",
+      "category": "Audio File I/O",
+      "usedBy": "services/ai-service/app, TTS",
+      "whyNeeded": "Direct binary read/write of uncompressed PCM WAV and lossless audio formats",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "librosa",
+      "version": "0.11.0",
+      "category": "Acoustic Signal Processing",
+      "usedBy": "TTS, scripts, diagnostics",
+      "whyNeeded": "Feature extraction, mel-filterbanks, STFT, and audio analysis utilities",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "pydantic",
+      "version": "2.13.4",
+      "category": "Data Validation & Contracts",
+      "usedBy": "services/ai-service/app/contracts",
+      "whyNeeded": "Data contract serialization, request/response schema validation, and type enforcement",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "pyttsx3",
+      "version": "2.99",
+      "category": "Offline TTS Fallback",
+      "usedBy": "services/ai-service/app/providers/voice_engine.py (FastPitchSynthesizer._pyttsx3_synthesize)",
+      "whyNeeded": "Emergency offline text-to-speech fallback using Windows SAPI if neural weights are missing",
+      "runtimeDevTest": "Runtime / Fallback",
+      "requiredOptional": "Optional",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "webrtcvad",
+      "version": "2.0.10",
+      "category": "Voice Activity Detection",
+      "usedBy": "resemblyzer, voice processing",
+      "whyNeeded": "Fast C-based speech/non-speech frame detection",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Optional",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "transformers",
+      "version": "4.38.2",
+      "category": "HuggingFace Transformers",
+      "usedBy": "TTS, faster-whisper",
+      "whyNeeded": "Tokenizers and transformer model architectures",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "huggingface_hub",
+      "version": "0.36.2",
+      "category": "Model Hub Integration",
+      "usedBy": "TTS, faster-whisper",
+      "whyNeeded": "Model checkpoint discovery, download, and local cache management",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "einops",
+      "version": "0.8.2",
+      "category": "Tensor Manipulation",
+      "usedBy": "TTS (XTTS v2 architecture)",
+      "whyNeeded": "Flexible tensor reshaping and Einstein notation operations in neural attention layers",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "encodec",
+      "version": "0.1.1",
+      "category": "Neural Audio Codec",
+      "usedBy": "TTS (XTTS v2 architecture)",
+      "whyNeeded": "High-fidelity neural audio representation and discrete tokenization for XTTS v2",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "soxr",
+      "version": "1.1.0",
+      "category": "Audio Resampling",
+      "usedBy": "librosa, TTS",
+      "whyNeeded": "High-quality sample rate conversion library",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Required",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "onnxruntime",
+      "version": "1.29.0",
+      "category": "ONNX Model Execution",
+      "usedBy": "faster-whisper, Silero VAD",
+      "whyNeeded": "High-performance ONNX neural network inference",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Optional",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "psutil",
+      "version": "7.2.2",
+      "category": "System Resource Monitoring",
+      "usedBy": "diagnostics, benchmark engine",
+      "whyNeeded": "Process memory, CPU, and hardware resource monitoring",
+      "runtimeDevTest": "Runtime / Diagnostic",
+      "requiredOptional": "Optional",
+      "directTransitive": "Direct",
+      "status": "ACTIVE_VERIFIED"
+    },
+    {
+      "package": "openvoice",
+      "version": "NOT_INSTALLED",
+      "category": "Tone Color Converter",
+      "usedBy": "services/ai-service/app/providers/voice_engine.py (OpenVoiceAdapter)",
+      "whyNeeded": "MyShell OpenVoice v2 tone color conversion (Declared adapter, but package not installed)",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Optional",
+      "directTransitive": "Direct",
+      "status": "UNAVAILABLE_HONEST_NON_FALLBACK"
+    },
+    {
+      "package": "cosyvoice",
+      "version": "NOT_INSTALLED",
+      "category": "In-Context Speech Synthesis",
+      "usedBy": "services/ai-service/app/providers/voice_engine.py (CosyVoiceAdapter)",
+      "whyNeeded": "Alibaba FunAudioLLM CosyVoice 2 (Declared adapter, but package not installed)",
+      "runtimeDevTest": "Runtime",
+      "requiredOptional": "Optional",
+      "directTransitive": "Direct",
+      "status": "UNAVAILABLE_HONEST_NON_FALLBACK"
+    }
+  ],
+  "nodeDependencies": {
+    "manifestPath": "apps/web/package.json",
+    "lockfilePath": "apps/web/package-lock.json",
+    "production": [
+      {
+        "package": "next",
+        "declaredVersion": "^14.2.3",
+        "category": "Web App Framework",
+        "usedBy": "apps/web/src/app (App Router pages, layout, route handling)",
+        "whyNeeded": "Full-stack React framework providing routing, server rendering, bundling, and asset serving",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "react",
+        "declaredVersion": "^18.3.1",
+        "category": "Frontend UI Core",
+        "usedBy": "apps/web/src components",
+        "whyNeeded": "Component lifecycle, state management, and DOM reconciliation",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "react-dom",
+        "declaredVersion": "^18.3.1",
+        "category": "Frontend UI Core",
+        "usedBy": "apps/web/src components",
+        "whyNeeded": "React DOM rendering engine for web browsers",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "three",
+        "declaredVersion": "^0.164.1",
+        "category": "3D Graphics Engine",
+        "usedBy": "apps/web/src/components/3d/LabScene.tsx",
+        "whyNeeded": "WebGL 3D graphics rendering for Cyber Avatar, spatial energy rings, and waveform visualizations",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "@react-three/fiber": {
+          "declaredVersion": "^8.16.6",
+          "category": "3D Graphics React Wrapper",
+          "usedBy": "apps/web/src/components/3d/LabScene.tsx",
+          "whyNeeded": "Declarative Three.js scene graph rendering using React component tree and useFrame animation loops",
+          "directTransitive": "Direct",
+          "status": "ACTIVE_VERIFIED"
+        }
+      },
+      {
+        "@react-three/drei": {
+          "declaredVersion": "^9.105.6",
+          "category": "3D Graphics Helpers",
+          "usedBy": "apps/web/src/components/3d/LabScene.tsx",
+          "whyNeeded": "Ready-to-use Three.js helper components (OrbitControls, Sphere, Float, Torus, Ring, Box)",
+          "directTransitive": "Direct",
+          "status": "ACTIVE_VERIFIED"
+        }
+      },
+      {
+        "package": "lucide-react",
+        "declaredVersion": "^0.378.0",
+        "category": "Iconography",
+        "usedBy": "apps/web/src/components/ui",
+        "whyNeeded": "UI icon components for dashboard, studio buttons, audio controls, and modal actions",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "clsx",
+        "declaredVersion": "^2.1.1",
+        "category": "CSS Utility",
+        "usedBy": "apps/web/src components",
+        "whyNeeded": "Conditional CSS class string concatenation",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "tailwind-merge",
+        "declaredVersion": "^2.3.0",
+        "category": "CSS Utility",
+        "usedBy": "apps/web/src components",
+        "whyNeeded": "Merges conflicting Tailwind CSS classes without style precedence bugs",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      }
+    ],
+    "development": [
+      {
+        "package": "typescript",
+        "declaredVersion": "^5.4.5",
+        "category": "Language / Compiler",
+        "usedBy": "Build & Typecheck",
+        "whyNeeded": "Static type checking and TypeScript compilation for apps/web and backend contracts",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "@types/node",
+        "declaredVersion": "^20.12.12",
+        "category": "Type Definitions",
+        "usedBy": "TypeScript build",
+        "whyNeeded": "Type definitions for Node.js APIs (fs, path, process, child_process)",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "@types/react",
+        "declaredVersion": "^18.3.2",
+        "category": "Type Definitions",
+        "usedBy": "TypeScript build",
+        "whyNeeded": "Type definitions for React 18 hooks, JSX, and components",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "@types/react-dom",
+        "declaredVersion": "^18.3.0",
+        "category": "Type Definitions",
+        "usedBy": "TypeScript build",
+        "whyNeeded": "Type definitions for ReactDOM",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "@types/three",
+        "declaredVersion": "^0.164.0",
+        "category": "Type Definitions",
+        "usedBy": "TypeScript build",
+        "whyNeeded": "Type definitions for Three.js 3D math and scene graph objects",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "tailwindcss",
+        "declaredVersion": "^3.4.3",
+        "category": "CSS Framework",
+        "usedBy": "PostCSS / Web UI Build",
+        "whyNeeded": "Utility-first CSS generation for cybernetic dark mode layout, glowing borders, and animations",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "postcss",
+        "declaredVersion": "^8.4.38",
+        "category": "CSS Post-Processor",
+        "usedBy": "Web UI Build",
+        "whyNeeded": "Processes Tailwind CSS directives and generates optimized CSS stylesheets",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      },
+      {
+        "package": "autoprefixer",
+        "declaredVersion": "^10.4.19",
+        "category": "CSS Post-Processor",
+        "usedBy": "Web UI Build",
+        "whyNeeded": "Adds vendor prefixes to CSS rules for cross-browser compatibility",
+        "directTransitive": "Direct",
+        "status": "ACTIVE_VERIFIED"
+      }
+    ]
+  },
+  "modelsInventory": [
+    {
+      "model": "Coqui XTTS v2",
+      "file": "model.pth",
+      "location": "C:\\Users\\HP\\AppData\\Local\\tts\\tts_models--multilingual--multi-dataset--xtts_v2\\model.pth",
+      "approximateSizeBytes": 1867929118,
+      "purpose": "Autoregressive neural zero-shot voice cloning transformer weights",
+      "requiredFor": "Zero-shot voice cloning, saved voice generation, 17-language synthesis",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Coqui XTTS v2 DVAE",
+      "file": "dvae.pth",
+      "location": "C:\\Users\\HP\\AppData\\Local\\tts\\tts_models--multilingual--multi-dataset--xtts_v2\\dvae.pth",
+      "approximateSizeBytes": 210514388,
+      "purpose": "Discrete Variational Autoencoder neural vocoder weights",
+      "requiredFor": "XTTS v2 latent audio decoding to 24kHz PCM speech waveform",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Coqui XTTS v2 Speaker Embeddings",
+      "file": "speakers_xtts.pth",
+      "location": "C:\\Users\\HP\\AppData\\Local\\tts\\tts_models--multilingual--multi-dataset--xtts_v2\\speakers_xtts.pth",
+      "approximateSizeBytes": 7754818,
+      "purpose": "Precomputed speaker embedding dictionary for XTTS default presets",
+      "requiredFor": "XTTS v2 preset speaker conditioning",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Coqui XTTS v2 Vocab",
+      "file": "vocab.json",
+      "location": "C:\\Users\\HP\\AppData\\Local\\tts\\tts_models--multilingual--multi-dataset--xtts_v2\\vocab.json",
+      "approximateSizeBytes": 361219,
+      "purpose": "Subword BPE vocabulary tokenizer mapping for 17 languages",
+      "requiredFor": "XTTS v2 text tokenization",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Coqui FastPitch (LJSpeech)",
+      "file": "model_file.pth",
+      "location": "C:\\Users\\HP\\AppData\\Local\\tts\\tts_models--en--ljspeech--fast_pitch\\model_file.pth",
+      "approximateSizeBytes": 458065485,
+      "purpose": "Non-autoregressive transformer acoustic model weights (LJSpeech single-speaker)",
+      "requiredFor": "Low-latency baseline speech synthesis and English benchmark tests",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Coqui HiFi-GAN v2 Vocoder",
+      "file": "model_file.pth",
+      "location": "C:\\Users\\HP\\AppData\\Local\\tts\\vocoder_models--en--ljspeech--hifigan_v2\\model_file.pth",
+      "approximateSizeBytes": 3794153,
+      "purpose": "HiFi-GAN neural vocoder weights for FastPitch mel-to-WAV conversion",
+      "requiredFor": "FastPitch neural acoustic waveform decoding",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Systran Faster-Whisper Base",
+      "file": "model.bin",
+      "location": "C:\\Users\\HP\\.cache\\huggingface\\hub\\models--Systran--faster-whisper-base\\snapshots\\ebe41f70d5b6dfa9166e2c581c45c9c0cfc57b66\\model.bin",
+      "approximateSizeBytes": 145217532,
+      "purpose": "CTranslate2 Whisper Base speech-to-text model binary",
+      "requiredFor": "Audio transcription, speech pipeline, diarization alignment",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Systran Faster-Whisper Tiny",
+      "file": "model.bin",
+      "location": "C:\\Users\\HP\\.cache\\huggingface\\hub\\models--Systran--faster-whisper-tiny\\snapshots\\d90ca5fe260221311c53c58e660288d3deb8d356\\model.bin",
+      "approximateSizeBytes": 75538270,
+      "purpose": "CTranslate2 Whisper Tiny speech-to-text model binary",
+      "requiredFor": "Ultra-fast low-latency transcription and diagnostic tests",
+      "status": "PRESENT_AND_VERIFIED"
+    },
+    {
+      "model": "Resemblyzer Pretrained Voice Encoder",
+      "file": "pretrained.pt",
+      "location": "C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\resemblyzer\\pretrained.pt",
+      "approximateSizeBytes": 17090379,
+      "purpose": "Pretrained 3-layer LSTM voice encoder for 256-D speaker embeddings",
+      "requiredFor": "Objective speaker similarity verification and fidelity auditing",
+      "status": "PRESENT_AND_VERIFIED"
+    }
+  ],
+  "modelReadinessSummary": {
+    "xtts-v2": {
+      "installed": true,
+      "weightsPresent": true,
+      "realAdapter": true,
+      "realInference": true,
+      "gpuSupported": true,
+      "voiceCloning": true,
+      "savedVoiceCompatible": true,
+      "status": "READY"
+    },
+    "fastpitch-baseline": {
+      "installed": true,
+      "weightsPresent": true,
+      "realAdapter": true,
+      "realInference": true,
+      "gpuSupported": true,
+      "voiceCloning": false,
+      "savedVoiceCompatible": false,
+      "status": "READY"
+    },
+    "openvoice-v2": {
+      "installed": false,
+      "weightsPresent": false,
+      "realAdapter": true,
+      "realInference": false,
+      "gpuSupported": false,
+      "voiceCloning": true,
+      "savedVoiceCompatible": false,
+      "status": "UNAVAILABLE"
+    },
+    "cosyvoice": {
+      "installed": false,
+      "weightsPresent": false,
+      "realAdapter": true,
+      "realInference": false,
+      "gpuSupported": false,
+      "voiceCloning": true,
+      "savedVoiceCompatible": false,
+      "status": "UNAVAILABLE"
+    },
+    "faster-whisper": {
+      "installed": true,
+      "weightsPresent": true,
+      "realAdapter": true,
+      "realInference": true,
+      "gpuSupported": true,
+      "voiceCloning": false,
+      "savedVoiceCompatible": false,
+      "status": "READY"
+    },
+    "resemblyzer": {
+      "installed": true,
+      "weightsPresent": true,
+      "realAdapter": true,
+      "realInference": true,
+      "gpuSupported": true,
+      "voiceCloning": false,
+      "savedVoiceCompatible": false,
+      "status": "READY"
+    }
+  },
+  "databaseStorage": {
+    "engine": "Solarch BaaS / PocketBase (Go) with SQLite",
+    "port": 8090,
+    "dataDirectory": "./pb_data",
+    "collections": [
+      "users",
+      "projects",
+      "source_assets",
+      "transcripts",
+      "voice_profiles",
+      "generation_jobs",
+      "generated_assets",
+      "conversations",
+      "vectors"
+    ],
+    "audioFileStorage": {
+      "rawUploads": "storage/voices",
+      "voiceProfiles": "storage/voice_profiles",
+      "generatedAudio": "storage/generated_audio",
+      "fidelityReports": "storage/fidelity"
+    }
+  },
+  "projectModified": false
+}

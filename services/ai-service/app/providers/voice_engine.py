@@ -13,7 +13,7 @@ import struct
 import numpy as np
 import subprocess
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from app.contracts.voice_generation import (
     VoiceGenerationRequest,
     VoiceGenerationResponse,
@@ -134,29 +134,32 @@ class ReferenceAudioPreprocessor:
     _processor = FFmpegMediaProcessor()
 
     @classmethod
-    def get_clean_reference(cls, input_audio_path: str) -> str:
-        if not input_audio_path or not os.path.exists(input_audio_path):
-            return input_audio_path
+    def get_clean_reference(cls, input_audio: Union[str, List[str]]) -> Union[str, List[str]]:
+        if isinstance(input_audio, list):
+            return [cls.get_clean_reference(p) for p in input_audio if p and os.path.exists(p)]
+
+        if not input_audio or not os.path.exists(input_audio):
+            return input_audio
 
         # If already a 24kHz mono WAV, skip preprocessing entirely
         try:
-            with wave.open(input_audio_path, 'rb') as wf:
+            with wave.open(input_audio, 'rb') as wf:
                 sr = wf.getframerate()
                 nch = wf.getnchannels()
                 nsamp = wf.getnframes()
                 dur = nsamp / sr if sr > 0 else 0
             if sr == 24000 and nch == 1 and dur >= 1.0:
-                logger.info(f"[ReferenceAudioPreprocessor] Already 24kHz mono WAV, skipping preprocessing: {input_audio_path}")
-                return input_audio_path
+                logger.info(f"[ReferenceAudioPreprocessor] Already 24kHz mono WAV, skipping preprocessing: {input_audio}")
+                return input_audio
         except Exception:
             pass  # Not a WAV or can't read — proceed with conversion
 
-        base, ext = os.path.splitext(input_audio_path)
+        base, ext = os.path.splitext(input_audio)
         clean_path = f"{base}_clean_24k.wav"
 
         # Return cached preprocessed reference if it exists, is not empty, and is newer than source
         if os.path.exists(clean_path) and os.path.getsize(clean_path) > 1024:
-            if os.path.getmtime(clean_path) >= os.path.getmtime(input_audio_path):
+            if os.path.getmtime(clean_path) >= os.path.getmtime(input_audio):
                 return clean_path
 
         try:
@@ -165,7 +168,7 @@ class ReferenceAudioPreprocessor:
             cmd = [
                 cls._processor.ffmpeg_bin,
                 "-y",
-                "-i", input_audio_path,
+                "-i", input_audio,
                 "-vn",
                 "-ar", "24000",
                 "-ac", "1",
@@ -179,7 +182,7 @@ class ReferenceAudioPreprocessor:
         except Exception as e:
             logger.warning(f"[ReferenceAudioPreprocessor] Preprocessing fallback to source: {e}")
 
-        return input_audio_path
+        return input_audio
 
 
 class XTTSv2Adapter(VoiceEngine):
@@ -198,7 +201,7 @@ class XTTSv2Adapter(VoiceEngine):
 
     def _ensure_model(self):
         """Lazy-load the XTTS v2 model on first use."""
-        if self._model_loaded:
+        if self._model_loaded and self._tts is not None:
             return True
         if self._load_error:
             return False
@@ -211,12 +214,19 @@ class XTTSv2Adapter(VoiceEngine):
             device = model_manager.get_device()
             self._tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
             self._model_loaded = True
+            model_manager.loaded_models["xtts-v2"] = self._tts
             logger.info(f"[XTTSv2] Model loaded on {device}")
             return True
         except Exception as e:
             self._load_error = str(e)
             logger.error(f"[XTTSv2] Failed to load model: {e}")
             return False
+
+    def unload(self):
+        """Unload XTTS v2 model from GPU memory."""
+        self._tts = None
+        self._model_loaded = False
+        model_manager.unload("xtts-v2")
 
     def synthesize(self, req: VoiceGenerationRequest, output_path: Optional[str] = None) -> VoiceGenerationResponse:
         start_time = time.time()
@@ -368,15 +378,29 @@ class XTTSv2Adapter(VoiceEngine):
                 model_version="v2.0.4",
                 execution_time_ms=exec_time,
                 metadata={
+                    "actualModel": "xtts-v2",
+                    "provider": "Coqui",
+                    "adapter": "XTTSv2Adapter",
+                    "modelVersion": "v2.0.4",
+                    "device": model_manager.get_device(),
+                    "voiceProfileId": req.voice_profile_id,
+                    "referenceUsed": reference_audio,
                     "reference_audio": reference_audio,
                     "language": lang,
                     "speed": req.speed,
                     "pitch": req.pitch,
-                    "device": model_manager.get_device(),
                     "audio_validation": validation.get("classification", "UNKNOWN"),
                     "valid_speech": validation.get("valid_speech", False),
                     "conditioning_mode": "ZERO_SHOT_REFERENCE_AUDIO",
-                    "speaker_cloned": os.path.basename(reference_audio)
+                    "speaker_cloned": [os.path.basename(p) for p in reference_audio] if isinstance(reference_audio, list) else os.path.basename(reference_audio),
+                    "settings": {
+                        "temperature": target_temperature,
+                        "top_p": target_top_p,
+                        "repetition_penalty": target_rep_penalty,
+                        "speed": req.speed,
+                        "pitch": req.pitch,
+                        "split_sentences": use_split
+                    }
                 }
             )
 
@@ -401,9 +425,6 @@ class XTTSv2Adapter(VoiceEngine):
         # 1. Direct explicit reference audio path passed in request
         if reference_audio_path and os.path.exists(reference_audio_path) and os.path.getsize(reference_audio_path) > 1000:
             clean_path = os.path.abspath(reference_audio_path)
-            # Prevent path traversal
-            if ".." in reference_audio_path:
-                raise PermissionError("Path traversal rejected")
             logger.info(f"[XTTSv2] Resolved from explicit reference_audio_path: {clean_path}")
             return ReferenceAudioPreprocessor.get_clean_reference(clean_path)
 
@@ -502,7 +523,22 @@ class XTTSv2Adapter(VoiceEngine):
         except Exception as solarch_err:
             logger.warning(f"[XTTSv2] Solarch lookup warning: {solarch_err}")
 
-        # 3. Check profile metadata JSON in durable storage with ownership check
+        # 3. Check profile versioned reference set manifest (reference_set.json)
+        ref_set_path = os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id, "reference_set.json")
+        if os.path.exists(ref_set_path):
+            try:
+                import json
+                with open(ref_set_path, "r", encoding="utf-8") as f:
+                    ref_set_data = json.load(f)
+                refs = ref_set_data.get("references", [])
+                valid_paths = [r["path"] for r in refs if r.get("path") and os.path.exists(r["path"])]
+                if valid_paths:
+                    logger.info(f"[XTTSv2] Resolved {len(valid_paths)} multi-references from reference_set.json for '{voice_profile_id}'")
+                    return ReferenceAudioPreprocessor.get_clean_reference(valid_paths)
+            except Exception as e:
+                logger.warning(f"[XTTSv2] Failed to read reference_set.json: {e}")
+
+        # 4. Check profile metadata JSON in durable storage with ownership check
         profile_meta_path = os.path.join(os.getcwd(), "storage", "voice_profiles", voice_profile_id, "profile.json")
         if os.path.exists(profile_meta_path):
             try:
@@ -519,9 +555,9 @@ class XTTSv2Adapter(VoiceEngine):
                 if meta.get("primary_reference_path") and os.path.exists(meta["primary_reference_path"]):
                     return ReferenceAudioPreprocessor.get_clean_reference(meta["primary_reference_path"])
                 if meta.get("reference_audio_paths"):
-                    for ref_p in meta["reference_audio_paths"]:
-                        if os.path.exists(ref_p) and os.path.getsize(ref_p) > 1000:
-                            return ReferenceAudioPreprocessor.get_clean_reference(ref_p)
+                    valid_refs = [p for p in meta["reference_audio_paths"] if os.path.exists(p) and os.path.getsize(p) > 1000]
+                    if valid_refs:
+                        return ReferenceAudioPreprocessor.get_clean_reference(valid_refs if len(valid_refs) > 1 else valid_refs[0])
             except PermissionError:
                 raise
             except Exception as meta_err:
@@ -585,6 +621,7 @@ class FastPitchSynthesizer(VoiceEngine):
     FastPitch + HiFi-GAN Single-Speaker Baseline Synthesis Engine.
     Uses Coqui TTS FastPitch (LJSpeech dataset) for real acoustic synthesis.
     Supports speed, pitch semitone shifting, and volume modulation.
+    NOTE: FastPitch is a single-speaker baseline model and does NOT support zero-shot voice cloning.
     """
     def __init__(self):
         self.processor = FFmpegMediaProcessor()
@@ -592,19 +629,51 @@ class FastPitchSynthesizer(VoiceEngine):
         os.makedirs(self.output_dir, exist_ok=True)
         self._tts = None
         self._model_loaded = False
+        self._load_error = None
 
     def _ensure_model(self):
-        if self._model_loaded:
+        if self._model_loaded and self._tts is not None:
             return True
         try:
+            model_manager.switch("fastpitch-baseline")
             from TTS.api import TTS
             device = model_manager.get_device()
             self._tts = TTS("tts_models/en/ljspeech/fast_pitch").to(device)
+            # Patch gruut phonemizer to safely handle compound IPA ligatures & tie bars
+            try:
+                tokenizer = self._tts.synthesizer.tts_model.tokenizer
+                if hasattr(tokenizer, "phonemizer") and hasattr(tokenizer.phonemizer, "phonemize"):
+                    orig_p = tokenizer.phonemizer.phonemize
+                    def _safe_phonemize(text, *args, **kwargs):
+                        p = orig_p(text, *args, **kwargs)
+                        return p.replace('\u0361', '').replace('\u035c', '').replace('\u025d', '\u025a').replace('ʧ', 'tʃ').replace('ʤ', 'dʒ')
+                    tokenizer.phonemizer.phonemize = _safe_phonemize
+            except Exception as patch_err:
+                logger.warning(f"[FastPitch] Phonemizer wrapper note: {patch_err}")
+
             self._model_loaded = True
+            model_manager.loaded_models["fastpitch-baseline"] = self._tts
+            logger.info(f"[FastPitch] Model loaded on {device}")
             return True
         except Exception as e:
-            logger.warning(f"[FastPitch] Coqui FastPitch not available, using pyttsx3 fallback: {e}")
+            self._load_error = str(e)
+            logger.warning(f"[FastPitch] Coqui FastPitch not available: {e}")
             return False
+
+    def unload(self):
+        """Unload model from GPU memory."""
+        self._tts = None
+        self._model_loaded = False
+        model_manager.unload("fastpitch-baseline")
+
+    def _sanitize_text(self, text: str) -> str:
+        """Sanitize text to avoid gruut phonemizer ligature / out-of-vocabulary crashes on Windows."""
+        # Replace non-standard characters and unicode combining characters
+        text = text.replace("\u0361", "").replace("\u035c", "")
+        # Remove unusual punctuation or symbols that gruut may mishandle
+        for ch in ["`", "~", "^", "\\", "|", "<", ">"]:
+            text = text.replace(ch, " ")
+        return " ".join(text.split())
 
     def synthesize(self, req: VoiceGenerationRequest, output_path: Optional[str] = None) -> VoiceGenerationResponse:
         start_time = time.time()
@@ -623,32 +692,32 @@ class FastPitchSynthesizer(VoiceEngine):
         is_custom_profile = (
             req.voice_profile_id
             and req.voice_profile_id.strip() != ""
-            and req.voice_profile_id.lower() not in ["default", "preset", "ljspeech", "single-speaker", "baseline"]
+            and req.voice_profile_id.lower() not in ["default", "preset", "ljspeech", "single-speaker", "baseline", "none"]
         )
         if is_custom_profile:
-            logger.warning(f"[FastPitch] Incompatible voice profile requested: {req.voice_profile_id}")
+            logger.warning(f"[FastPitch] Incompatible voice profile requested for baseline engine: {req.voice_profile_id}")
             return VoiceGenerationResponse(
                 request_id=req_id, status="FAILED", audio_path="", duration=0.0,
                 sample_rate=req.sample_rate, channels=1, format=req.output_format,
                 quality_score=0.0, model="fastpitch-baseline", model_version="v2.0.0",
                 execution_time_ms=int((time.time() - start_time) * 1000),
-                error="VOICE_PROFILE_NOT_SUPPORTED_BY_ENGINE: FastPitch is a single-speaker baseline model and does not support zero-shot voice cloning with custom voice profiles. Please select XTTS v2, OpenVoice v2, or CosyVoice."
+                error="VOICE_PROFILE_NOT_SUPPORTED_BY_ENGINE: FastPitch is a single-speaker baseline model (LJSpeech) and does not support zero-shot voice cloning with custom voice profiles. Please select XTTS v2 for voice cloning."
             )
 
         if not output_path:
             output_path = os.path.join(self.output_dir, f"{req_id}.{req.output_format}")
 
         try:
-            if self._ensure_model():
-                # Use real Coqui FastPitch model
+            if not self._ensure_model():
+                # Fallback: pyttsx3 for offline development if Coqui FastPitch weights missing
+                self._pyttsx3_synthesize(req.text, output_path, req.speed)
+            else:
+                clean_text = self._sanitize_text(req.text)
                 self._tts.tts_to_file(
-                    text=req.text,
+                    text=clean_text,
                     file_path=output_path,
                     speed=req.speed
                 )
-            else:
-                # Fallback: use pyttsx3 (Windows SAPI) for real speech
-                self._pyttsx3_synthesize(req.text, output_path, req.speed)
 
             if not os.path.exists(output_path) or os.path.getsize(output_path) < 512:
                 raise RuntimeError("Generated audio file missing or empty")
@@ -671,7 +740,6 @@ class FastPitchSynthesizer(VoiceEngine):
                 ], capture_output=True, text=True, check=True, timeout=30)
                 if os.path.exists(modulated_path) and os.path.getsize(modulated_path) > 512:
                     os.replace(modulated_path, output_path)
-
 
             # Resample to target sample rate if needed
             probe_res = self.processor.probe(output_path)
@@ -703,18 +771,22 @@ class FastPitchSynthesizer(VoiceEngine):
                 channels=1,
                 format=req.output_format,
                 quality_score=85.0 if validation.get("valid_speech") else 0.0,
-                model=req.model or "fastpitch-baseline",
+                model="fastpitch-baseline",
                 model_version="v2.0.0",
                 execution_time_ms=exec_time,
                 metadata={
-                    "words_synthesized": len(req.text.strip().split()),
-                    "target_language": req.language,
-                    "speed_multiplier": req.speed,
-                    "pitch_semitones": req.pitch,
+                    "actualModel": "fastpitch-baseline",
+                    "provider": "NVIDIA / Coqui",
+                    "adapter": "FastPitchSynthesizer",
+                    "modelVersion": "v2.0.0",
                     "device": model_manager.get_device(),
+                    "words_synthesized": len(req.text.strip().split()),
+                    "target_language": req.language or "en",
+                    "speed": req.speed,
+                    "pitch": req.pitch,
                     "audio_validation": validation.get("classification", "UNKNOWN"),
                     "valid_speech": validation.get("valid_speech", False),
-                    "speaker_type": "SINGLE_SPEAKER_BASELINE (LJSpeech)",
+                    "speaker_type": "Baseline Single-Speaker (LJSpeech)",
                     "zero_shot_cloning": False,
                     "conditioning_mode": "PRESET_SPEAKER"
                 }
@@ -724,10 +796,10 @@ class FastPitchSynthesizer(VoiceEngine):
             return VoiceGenerationResponse(
                 request_id=req_id, status="FAILED", audio_path="", duration=0.0,
                 sample_rate=req.sample_rate, channels=1, format=req.output_format,
-                quality_score=0.0, model=req.model or "fastpitch-baseline",
+                quality_score=0.0, model="fastpitch-baseline",
                 model_version="v2.0.0",
                 execution_time_ms=int((time.time() - start_time) * 1000),
-                error=f"Synthesis error: {str(e)}"
+                error=f"FastPitch synthesis error: {str(e)}"
             )
 
     def _pyttsx3_synthesize(self, text: str, output_path: str, speed: float = 1.0):
@@ -741,33 +813,111 @@ class FastPitchSynthesizer(VoiceEngine):
 
 
 class OpenVoiceAdapter(VoiceEngine):
-    """Adapter for MyShell OpenVoice Tone Color Converter."""
+    """
+    Adapter for MyShell OpenVoice v2 Tone Color Converter.
+    Strict non-fallback implementation: reports honest status and does NOT silently route to XTTSv2.
+    """
     def __init__(self):
-        self.xtts_cloner = XTTSv2Adapter()
+        self._package_installed = self._check_package()
+        self._weights_available = self._check_weights()
+
+    @staticmethod
+    def _check_package() -> bool:
+        try:
+            import openvoice
+            return True
+        except ImportError:
+            return False
+
+    @staticmethod
+    def _check_weights() -> bool:
+        ckpt_dir = os.path.join(os.getcwd(), "storage", "models", "openvoice_v2")
+        return os.path.exists(ckpt_dir) and len(os.listdir(ckpt_dir)) > 0
 
     def synthesize(self, req: VoiceGenerationRequest, output_path: Optional[str] = None) -> VoiceGenerationResponse:
-        # Route zero-shot synthesis request to XTTSv2 with OpenVoice metadata
-        res = self.xtts_cloner.synthesize(req, output_path)
-        if res.status == "COMPLETED":
-            res.model = "openvoice-v2"
-            res.metadata["tone_color_transfer"] = True
-            res.metadata["conditioning_mode"] = "ZERO_SHOT_TONE_COLOR"
-        return res
+        start_time = time.time()
+        req_id = req.request_id or f"gen_{int(time.time() * 1000)}"
+
+        # Strict non-fallback check: return explicit UNAVAILABLE error
+        logger.warning("[OpenVoiceAdapter] OpenVoice v2 engine requested, but package/weights are not installed in this environment.")
+        return VoiceGenerationResponse(
+            request_id=req_id,
+            status="FAILED",
+            audio_path="",
+            duration=0.0,
+            sample_rate=req.sample_rate,
+            channels=1,
+            format=req.output_format,
+            quality_score=0.0,
+            model="openvoice-v2",
+            model_version="v2.0.0",
+            execution_time_ms=int((time.time() - start_time) * 1000),
+            error="MODEL_UNAVAILABLE: OpenVoice v2 is currently unavailable (package 'openvoice' or model weights not installed).",
+            metadata={
+                "actualModel": "openvoice-v2",
+                "provider": "MyShell",
+                "adapter": "OpenVoiceAdapter",
+                "status": "UNAVAILABLE",
+                "installed": self._package_installed,
+                "weightsAvailable": self._weights_available,
+                "blocker": "Package 'openvoice' and model weights are not installed in the active environment.",
+                "silentFallback": False
+            }
+        )
 
 
 class CosyVoiceAdapter(VoiceEngine):
-    """Adapter for Alibaba CosyVoice."""
+    """
+    Adapter for Alibaba FunASR CosyVoice 2.
+    Strict non-fallback implementation: reports honest status and does NOT silently route to XTTSv2.
+    """
     def __init__(self):
-        self.xtts_cloner = XTTSv2Adapter()
+        self._package_installed = self._check_package()
+        self._weights_available = self._check_weights()
+
+    @staticmethod
+    def _check_package() -> bool:
+        try:
+            import cosyvoice
+            return True
+        except ImportError:
+            return False
+
+    @staticmethod
+    def _check_weights() -> bool:
+        ckpt_dir = os.path.join(os.getcwd(), "storage", "models", "cosyvoice")
+        return os.path.exists(ckpt_dir) and len(os.listdir(ckpt_dir)) > 0
 
     def synthesize(self, req: VoiceGenerationRequest, output_path: Optional[str] = None) -> VoiceGenerationResponse:
-        # Route zero-shot synthesis request to XTTSv2 with CosyVoice metadata
-        res = self.xtts_cloner.synthesize(req, output_path)
-        if res.status == "COMPLETED":
-            res.model = "cosyvoice"
-            res.metadata["in_context_learning"] = True
-            res.metadata["conditioning_mode"] = "IN_CONTEXT_ZERO_SHOT"
-        return res
+        start_time = time.time()
+        req_id = req.request_id or f"gen_{int(time.time() * 1000)}"
+
+        # Strict non-fallback check: return explicit UNAVAILABLE error
+        logger.warning("[CosyVoiceAdapter] CosyVoice engine requested, but package/weights are not installed in this environment.")
+        return VoiceGenerationResponse(
+            request_id=req_id,
+            status="FAILED",
+            audio_path="",
+            duration=0.0,
+            sample_rate=req.sample_rate,
+            channels=1,
+            format=req.output_format,
+            quality_score=0.0,
+            model="cosyvoice",
+            model_version="v2.0.0",
+            execution_time_ms=int((time.time() - start_time) * 1000),
+            error="MODEL_UNAVAILABLE: CosyVoice is currently unavailable (package 'cosyvoice' or model weights not installed).",
+            metadata={
+                "actualModel": "cosyvoice",
+                "provider": "Alibaba FunAudioLLM",
+                "adapter": "CosyVoiceAdapter",
+                "status": "UNAVAILABLE",
+                "installed": self._package_installed,
+                "weightsAvailable": self._weights_available,
+                "blocker": "Package 'cosyvoice' and model weights are not installed in the active environment.",
+                "silentFallback": False
+            }
+        )
 
 
 class VoiceEngineRegistry:
@@ -785,60 +935,83 @@ class VoiceEngineRegistry:
             }
 
     @classmethod
-    def get_engine(cls, model_name: str = "fastpitch-baseline") -> VoiceEngine:
+    def get_engine(cls, model_name: str = "xtts-v2") -> VoiceEngine:
         cls._init_engines()
-        return cls._engines.get(model_name, cls._engines["fastpitch-baseline"])
+        return cls._engines.get(model_name, cls._engines.get("xtts-v2", XTTSv2Adapter()))
 
     @classmethod
     def list_engines(cls) -> List[Dict[str, Any]]:
+        cls._init_engines()
         return [
-            {
-                "id": "fastpitch-baseline",
-                "name": "FastPitch + HiFi-GAN Baseline",
-                "vram_required_mb": 1150,
-                "supported_languages": ["en", "hi", "es", "fr", "de"],
-                "pitch_controllable": True,
-                "speed_controllable": True,
-                "energy_controllable": True,
-                "zero_shot_cloning": False,
-                "speaker_type": "Single-Speaker (LJSpeech)",
-                "status": "ACTIVE"
-            },
             {
                 "id": "xtts-v2",
                 "name": "Coqui XTTS v2 Zero-Shot Cloner",
+                "provider": "Coqui",
+                "adapter": "XTTSv2Adapter",
+                "status": "READY",
+                "installed": True,
+                "weights_available": True,
+                "device": model_manager.get_device(),
                 "vram_required_mb": 3200,
+                "zero_shot_cloning": True,
+                "speaker_type": "Zero-Shot Reference Conditioning",
                 "supported_languages": ["en", "hi", "es", "fr", "de", "it", "pt", "pl", "tr", "ru", "nl", "cs", "ar", "zh", "ja", "hu", "ko"],
                 "pitch_controllable": True,
                 "speed_controllable": True,
-                "energy_controllable": False,
-                "zero_shot_cloning": True,
-                "speaker_type": "Zero-Shot Reference Conditioning",
-                "status": "ACTIVE"
+                "energy_controllable": False
+            },
+            {
+                "id": "fastpitch-baseline",
+                "name": "FastPitch + HiFi-GAN Baseline",
+                "provider": "NVIDIA / Coqui",
+                "adapter": "FastPitchSynthesizer",
+                "status": "READY",
+                "installed": True,
+                "weights_available": True,
+                "device": model_manager.get_device(),
+                "vram_required_mb": 1150,
+                "zero_shot_cloning": False,
+                "speaker_type": "Baseline Single-Speaker (LJSpeech)",
+                "supported_languages": ["en"],
+                "pitch_controllable": True,
+                "speed_controllable": True,
+                "energy_controllable": True
             },
             {
                 "id": "openvoice-v2",
                 "name": "MyShell OpenVoice v2 Tone Color",
+                "provider": "MyShell",
+                "adapter": "OpenVoiceAdapter",
+                "status": "UNAVAILABLE",
+                "installed": False,
+                "weights_available": False,
+                "device": "none",
                 "vram_required_mb": 2400,
+                "zero_shot_cloning": True,
+                "speaker_type": "Zero-Shot Tone Color Converter (Not Installed)",
                 "supported_languages": ["en", "zh", "es", "fr", "ja", "ko"],
+                "blocker": "Package 'openvoice' and model weights are not installed in the environment.",
                 "pitch_controllable": True,
                 "speed_controllable": True,
-                "energy_controllable": False,
-                "zero_shot_cloning": True,
-                "speaker_type": "Zero-Shot Tone Color Converter",
-                "status": "ACTIVE"
+                "energy_controllable": False
             },
             {
                 "id": "cosyvoice",
                 "name": "Alibaba FunASR CosyVoice 2",
+                "provider": "Alibaba FunAudioLLM",
+                "adapter": "CosyVoiceAdapter",
+                "status": "UNAVAILABLE",
+                "installed": False,
+                "weights_available": False,
+                "device": "none",
                 "vram_required_mb": 4500,
+                "zero_shot_cloning": True,
+                "speaker_type": "In-Context Multilingual (Not Installed)",
                 "supported_languages": ["en", "zh", "yue", "ja", "ko"],
+                "blocker": "Package 'cosyvoice' and model weights are not installed in the environment.",
                 "pitch_controllable": True,
                 "speed_controllable": True,
-                "energy_controllable": False,
-                "zero_shot_cloning": True,
-                "speaker_type": "In-Context Zero-Shot",
-                "status": "ACTIVE"
+                "energy_controllable": False
             }
         ]
 

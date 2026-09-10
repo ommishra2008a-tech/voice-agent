@@ -1,0 +1,38 @@
+    def synthesize(self, text, config, speaker_wav, language, speaker_id=None, **kwargs):
+        """Synthesize speech with the given input text.
+
+        Args:
+            text (str): Input text.
+            config (XttsConfig): Config with inference parameters.
+            speaker_wav (list): List of paths to the speaker audio files to be used for cloning.
+            language (str): Language ID of the speaker.
+            **kwargs: Inference settings. See `inference()`.
+
+        Returns:
+            A dictionary of the output values with `wav` as output waveform, `deterministic_seed` as seed used at inference,
+            `text_input` as text token IDs after tokenizer, `voice_samples` as samples used for cloning, `conditioning_latents`
+            as latents used at inference.
+
+        """
+        assert (
+            "zh-cn" if language == "zh" else language in self.config.languages
+        ), f" ❗ Language {language} is not supported. Supported languages are {self.config.languages}"
+        # Use generally found best tuning knobs for generation.
+        settings = {
+            "temperature": config.temperature,
+            "length_penalty": config.length_penalty,
+            "repetition_penalty": config.repetition_penalty,
+            "top_k": config.top_k,
+            "top_p": config.top_p,
+        }
+        settings.update(kwargs)  # allow overriding of preset settings with kwargs
+        if speaker_id is not None:
+            gpt_cond_latent, speaker_embedding = self.speaker_manager.speakers[speaker_id].values()
+            return self.inference(text, language, gpt_cond_latent, speaker_embedding, **settings)
+        settings.update({
+            "gpt_cond_len": config.gpt_cond_len,
+            "gpt_cond_chunk_len": config.gpt_cond_chunk_len,
+            "max_ref_len": config.max_ref_len,
+            "sound_norm_refs": config.sound_norm_refs,
+        })
+        return self.full_inference(text, speaker_wav, language, **settings)

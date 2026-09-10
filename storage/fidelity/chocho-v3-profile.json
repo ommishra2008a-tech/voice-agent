@@ -1,0 +1,34 @@
+{
+  "id": "chocho_v3",
+  "name": "chocho",
+  "version": "v3",
+  "alias": "aadi",
+  "language": "en",
+  "gender": "female",
+  "primary_reference_path": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference.wav",
+  "reference_audio_paths": [
+    "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference_1.wav",
+    "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference_2.wav",
+    "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference_3.wav",
+    "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference_4.wav",
+    "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference_5.wav"
+  ],
+  "reference_set_manifest": "D:\\testing\\projects\\AGENT\\voice-agent\\storage\\voice_profiles\\chocho_v3\\reference_set.json",
+  "total_duration_sec": 37.52,
+  "recommended_settings": {
+    "temperature": 0.85,
+    "repetition_penalty": 7.0,
+    "top_p": 0.88,
+    "length_penalty": 1.05
+  },
+  "measured_benchmarks": {
+    "canonical_v1_baseline": 78.05,
+    "canonical_v2_baseline": 78.46,
+    "canonical_v3_result": 77.84,
+    "10_text_v1_mean": 76.99,
+    "10_text_v2_mean": 77.03,
+    "10_text_v3_mean": 78.52,
+    "v3_net_mean_gain": 1.53
+  },
+  "updated_at": "2026-09-09T18:14:37Z"
+}

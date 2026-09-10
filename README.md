@@ -130,7 +130,8 @@ npx solarch-cli serve --port 8090
 #### Start Next.js Frontend (Port 3000)
 ```bash
 # In apps/web directory:
-npm run dev
+
+
 ```
 
 Visit **`http://localhost:3000`** in your browser.
